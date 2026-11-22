@@ -250,6 +250,10 @@ audio{width:100%;margin-top:10px}
   <div id="songList">
     <h2 id="t-songs">Play-along songs</h2>
     <p class="lead">One bar of clicks counts you in. The big card is the chord to play now; the small one is coming next.</p>
+    <h3 style="margin-top:4px">Chord combos</h3>
+    <p class="note">Practise the changes on their own before the song: two rounds with two bars on each chord, then two faster rounds with one.</p>
+    <div class="songs" id="combos"></div>
+    <h3>Songs</h3>
     <div class="songs" id="songs"></div>
     <h3>Singing while you play</h3>
     <div class="card">
@@ -264,6 +268,7 @@ audio{width:100%;margin-top:10px}
   <div id="player" hidden>
     <button class="back" id="pBack" type="button">← All songs</button>
     <h2 id="pTitle"></h2>
+    <p class="note" id="pNote" hidden></p>
     <div class="card">
       <div class="stage">
         <div><div class="swatch now" id="pNow"></div><div class="beats" id="pBeats"></div></div>
@@ -405,6 +410,7 @@ const SONGS=[
  {n:'Row, Row, Row Your Boat',m:4,bpm:90,b:[['C','Row, row, row your boat,'],['C','gently down the stream.'],['C','Merrily, merrily,'],['C','merrily, merrily,'],['G7','life is but a'],['C','dream.']]},
  {n:'Happy Birthday',m:3,bpm:96,b:[['C','Happy birthday to'],['G7','you, happy'],['G7','birthday to'],['C','you, happy'],['C7','birthday, dear'],['F','friend, happy'],['G7','birthday to'],['C','you!']]},
  {n:'Jingle Bells',m:4,bpm:104,b:[['C','Jingle bells,'],['C','jingle bells,'],['C','jingle all the'],['C','way.'],['F','Oh, what fun it'],['C','is to ride in a'],['D7','one-horse open'],['G7','sleigh, hey!'],['C','Jingle bells,'],['C','jingle bells,'],['C','jingle all the'],['C','way.'],['F','Oh, what fun it'],['C','is to ride in a'],['G7','one-horse open'],['C','sleigh!']]},
+ {n:'You Are My Sunshine',m:4,bpm:100,note:'Chords only, so sing the words you know. The four-bar phrases line up with the lines of the chorus.',b:[['C',''],['C',''],['C',''],['C',''],['F',''],['F',''],['C',''],['C',''],['F',''],['F',''],['C',''],['C',''],['G',''],['G',''],['C',''],['C','']]},
  {n:'We Wish You a Merry Christmas',m:3,bpm:108,b:[['C','We wish you a'],['C','merry'],['F','Christmas, we'],['D7','wish you a'],['D7','merry'],['G7','Christmas, we'],['E7','wish you a'],['E7','merry'],['Am','Christmas, and a'],['F','happy'],['G7','new'],['C','year!']]},
  {n:'Skip to My Lou',m:4,bpm:100,b:[['C','Lou, Lou,'],['C','skip to my Lou,'],['G7','Lou, Lou,'],['G7','skip to my Lou,'],['C','Lou, Lou,'],['C','skip to my Lou,'],['G7','skip to my Lou, my'],['C','darling.']]},
  {n:'Down in the Valley',m:3,bpm:84,b:[['C','Down in the'],['C','valley, the'],['C','valley so'],['G7','low,'],['G7','Hang your head'],['G7','over, hear the'],['G7','wind'],['C','blow.']]},
@@ -413,7 +419,18 @@ const SONGS=[
  {n:'Oh! Susanna',m:4,bpm:100,b:[['C','I come from Alabama'],['C','with my'],['G7','banjo on my knee,'],['G7',''],['C',"I'm going to Louisiana,"],['C','my'],['G7','true love for to'],['C','see.'],['F','Oh, Susanna,'],['F',''],['C',"oh, don't you cry for"],['G7','me,'],['C','For I come from Alabama'],['C','with my'],['G7','banjo on my'],['C','knee.']]},
  {n:'Amazing Grace',m:3,bpm:72,b:[['C','Amazing'],['C','grace, how'],['C7','sweet the'],['F','sound, that'],['C','saved a'],['C','wretch like'],['G7','me.'],['G7','I'],['C','once was'],['C','lost, but'],['C7','now am'],['F','found, was'],['C','blind, but'],['G7','now I'],['C','see.'],['C','']]}
 ];
-$('#songs').innerHTML=SONGS.map((s,i)=>{const cs=[...new Set(s.b.map(x=>x[0]))];return `<button class="song" type="button" data-s="${i}"><b>${s.n}</b><span class="mini">${cs.map(c=>`<i style="${cv(c)}">${c}</i>`).join('')}</span><span>${s.m}/4 time, ${s.bpm} BPM</span></button>`}).join('');
+$('#songs').innerHTML=SONGS.map((s,i)=>{const cs=[...new Set(s.b.map(x=>x[0]))];return `<button class="song" type="button" data-s="${i}"><b>${s.n}</b><span class="mini">${cs.map(c=>`<i style="${cv(c)}">${c}</i>`).join('')}</span><span>${s.m}/4 time, ${s.bpm} BPM${s.note?', chords only':''}</span></button>`}).join('');
+const chordsOf=sg=>[...new Set(sg.b.map(x=>x[0]))];
+const andList=a=>a.length<2?a.join(''):a.slice(0,-1).join(', ')+' and '+a[a.length-1];
+const COMBOS=[{ch:['C','Am'],h:'Your first change: lift one finger, add one finger.'},{ch:['C','G7'],h:'The change behind most of the first songs.'},{ch:['C','F'],h:'Keep your middle finger close to the G string.'},{ch:['C','F','G7'],h:'The three-chord trick behind hundreds of folk songs.'},{ch:['C','F','G'],h:'Same trick with full G. Move all three G fingers as one shape.'},{ch:['C','C7','F'],h:'C7 pulls you towards F, as in When the Saints.'},{ch:['G','C','D'],h:'The three-chord trick in the key of G.'},{ch:['Am','Dm','E7'],h:'A minor-key sound.'}].map(c=>{
+ const [a,b,d]=c.ch,r1=d?[a,a,b,b,a,a,d,d]:[a,a,b,b],r2=d?[a,b,a,d]:[a,b],bars=[];
+ [r1,r1,r2,r2].forEach((r,ri)=>r.forEach((x,j)=>bars.push([x,j?'':`Round ${ri+1}${ri<2?', two bars each':', one bar each'}`])));bars.push([a,'Finish']);
+ const only=SONGS.filter(sg=>chordsOf(sg).every(x=>c.ch.includes(x))).map(sg=>sg.n),also=SONGS.filter(sg=>c.ch.every(x=>chordsOf(sg).includes(x))).map(sg=>sg.n);
+ return {n:andList(c.ch),id:c.ch.join('-'),combo:1,m:4,bpm:80,b:bars,note:c.h,ready:only,also}});
+const comboById=id=>COMBOS.find(c=>c.id===id);
+const short=a=>a.slice(0,2).join(', ')+(a.length>2?` and ${a.length-2} more`:'');
+$('#combos').innerHTML=COMBOS.map((c,i)=>`<button class="song" type="button" data-c="${i}"><b>${c.n}</b><span class="mini">${c.id.split('-').map(x=>`<i style="${cv(x)}">${x}</i>`).join('')}</span><span>${c.ready.length?'Gets you ready for '+short(c.ready):c.also.length?'Used in '+short(c.also):c.note}</span></button>`).join('');
+$('#combos').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(b)openSong(COMBOS[+b.dataset.c])});
 let song=null,lastBar=-2;
 function stage(b){const cur=b<0?song.b[0][0]:song.b[b][0],nx=song.b[Math.min(song.b.length-1,b+1)][0];swatch($('#pNow'),cur,96);swatch($('#pNext'),nx,56);document.querySelectorAll('.bar').forEach(x=>x.classList.toggle('cur',+x.dataset.b===b));const el=document.querySelector(`.bar[data-b="${b}"]`);if(el)el.scrollIntoView({block:'nearest',behavior:'smooth'})}
 function beats(n,on){$('#pBeats').innerHTML=Array.from({length:n},(_,i)=>`<i class="${i===on?'on':''}"></i>`).join('')}
@@ -421,8 +438,8 @@ const slowBpm=()=>Math.max(50,Math.round(song.bpm*0.7/2)*2);
 function setBpmP(v){$('#pBpm').value=v;$('#pBpmOut').textContent=$('#pBpm').value+' BPM';$('#pSlow').setAttribute('aria-pressed',String(+$('#pBpm').value<song.bpm))}
 $('#pSlow').addEventListener('click',()=>setBpmP(+$('#pBpm').value<song.bpm?song.bpm:slowBpm()));
 $('#pWait').checked=store.get('uke-wait',false);$('#pWait').addEventListener('change',()=>store.set('uke-wait',$('#pWait').checked));
-$('#songs').addEventListener('click',e=>{const b=e.target.closest('[data-s]');if(b)openSong(+b.dataset.s)});
-function openSong(i,st){stopAll();song=SONGS[i];$('#songList').hidden=true;$('#player').hidden=false;$('#pTitle').textContent=song.n;$('#pGo').textContent='Play';setBpmP(st&&st.slow?slowBpm():song.bpm);if(st){$('#pWait').checked=!!st.wait&&!st.free}$('#pLyr').innerHTML=song.b.map((x,i)=>`<div class="bar" data-b="${i}" style="${cv(x[0])}"><em>${x[0]}</em><br>${x[1]||'&nbsp;'}</div>`).join('');stage(-1);beats(song.m,-1);$('#main').scrollTop=0}
+$('#songs').addEventListener('click',e=>{const b=e.target.closest('[data-s]');if(b)openSong(SONGS[+b.dataset.s])});
+function openSong(sg,st){stopAll();song=sg;$('#songList').hidden=true;$('#player').hidden=false;$('#pTitle').textContent=(song.combo?'Combo: ':'')+song.n;$('#pNote').textContent=song.note||'';$('#pNote').hidden=!song.note;$('#pGo').textContent='Play';setBpmP(st&&st.slow?slowBpm():song.bpm);if(st){$('#pWait').checked=!!st.wait&&!st.free}$('#pLyr').innerHTML=song.b.map((x,i)=>`<div class="bar" data-b="${i}" style="${cv(x[0])}"><em>${x[0]}</em><br>${x[1]||'&nbsp;'}</div>`).join('');stage(-1);beats(song.m,-1);$('#main').scrollTop=0}
 $('#pBack').addEventListener('click',()=>{stopAll();$('#player').hidden=true;$('#songList').hidden=false});
 $('#pBpm').addEventListener('input',()=>setBpmP($('#pBpm').value));
 const WT={mic:null,iv:null,go:null,used:false};
@@ -432,7 +449,7 @@ function micEnd(){if(WT.mic){WT.mic.st.getTracks().forEach(t=>t.stop());WT.mic=n
 function release(){const g=WT.go;waitEnd();if(g)g()}
 function waitFor(ch,go){WT.used=true;WT.go=go;$('#pNow').classList.add('waiting');$('#pWaitBox').hidden=false;if(WT.mic){$('#pWaitMsg').innerHTML=`Play <b>${ch}</b> to carry on. Listening…`;$('#pSkip').textContent='Skip';let hits=0;const buf=new Float32Array(WT.mic.an.fftSize);WT.iv=setInterval(()=>{if(!WT.mic)return;WT.mic.an.getFloatTimeDomainData(buf);if(hears(ch,buf,ctx.sampleRate)){if(++hits>=2)release()}else hits=0},120)}else{$('#pWaitMsg').innerHTML=`Fingers on <b>${ch}</b>? Tap Continue when you're ready.`;$('#pSkip').textContent='Continue'}}
 $('#pSkip').addEventListener('click',release);
-$('#pGo').addEventListener('click',async()=>{if(E.on&&E.o.tag==='song'){stopAll();return}stopAll();ac();WT.used=false;if($('#pWait').checked){$('#pGo').disabled=true;WT.mic=await mic(8192);$('#pGo').disabled=false}$('#pGo').textContent='Stop';lastBar=-2;engStart({tag:'song',countIn:true,bars:song.b.length,bpm:()=>+$('#pBpm').value,pattern:()=>song.m===3?'D.D.D.':'D.DUD.DU',chord:b=>song.b[b][0],sound:()=>$('#pSound').checked,click:()=>true,waitAt:b=>$('#pWait').checked&&b>0&&song.b[b][0]!==song.b[b-1][0],onWait:(b,go)=>{lastBar=b;stage(b);beats(song.m,-1);waitFor(song.b[b][0],go)},ui:(s,b)=>{if(b!==lastBar){lastBar=b;stage(b)}beats(song.m,s>>1)},done:()=>{$('#pGo').textContent='Play again';beats(song.m,-1);micEnd();autoDone('song',song.n,{free:!WT.used})}})});
+$('#pGo').addEventListener('click',async()=>{if(E.on&&E.o.tag==='song'){stopAll();return}stopAll();ac();WT.used=false;if($('#pWait').checked){$('#pGo').disabled=true;WT.mic=await mic(8192);$('#pGo').disabled=false}$('#pGo').textContent='Stop';lastBar=-2;engStart({tag:'song',countIn:true,bars:song.b.length,bpm:()=>+$('#pBpm').value,pattern:()=>song.m===3?'D.D.D.':'D.DUD.DU',chord:b=>song.b[b][0],sound:()=>$('#pSound').checked,click:()=>true,waitAt:b=>$('#pWait').checked&&b>0&&song.b[b][0]!==song.b[b-1][0],onWait:(b,go)=>{lastBar=b;stage(b);beats(song.m,-1);waitFor(song.b[b][0],go)},ui:(s,b)=>{if(b!==lastBar){lastBar=b;stage(b)}beats(song.m,s>>1)},done:()=>{$('#pGo').textContent='Play again';beats(song.m,-1);micEnd();if(song.combo)autoDone('combo',song.id);else autoDone('song',song.n,{free:!WT.used})}})});
 
 /* practice */
 const opts=ORDER.map(n=>`<option>${n}</option>`).join('');$('#dA').innerHTML=opts;$('#dB').innerHTML=opts;$('#dA').value='C';$('#dB').value='Am';
@@ -455,15 +472,19 @@ const PATH=[
   {id:'d1',t:'drill',k:['C','Am'],goal:20},
   {id:'g7',t:'chord',k:'G7'},
   {id:'d2',t:'drill',k:['C','G7'],goal:15},
+  {id:'cb-cg7',t:'combo',k:'C-G7',slow:1,wait:1},
   {id:'row',t:'song',k:'Row, Row, Row Your Boat',slow:1,wait:1}]},
  {w:'Three-chord songs',s:[
   {id:'d3',t:'drill',k:['C','Am'],goal:30},
   {id:'skip',t:'song',k:'Skip to My Lou',slow:1,wait:1},
   {id:'f',t:'chord',k:'F'},
+  {id:'cb-cfg7',t:'combo',k:'C-F-G7',wait:1},
   {id:'c7',t:'chord',k:'C7'},
   {id:'hb',t:'song',k:'Happy Birthday',slow:1,wait:1}]},
  {w:'The four-chord loop',s:[
   {id:'g',t:'chord',k:'G'},
+  {id:'cb-cfg',t:'combo',k:'C-F-G',slow:1,wait:1},
+  {id:'sun',t:'song',k:'You Are My Sunshine',wait:1},
   {id:'d4',t:'drill',k:['Am','F'],goal:25},
   {id:'s2',t:'strum',k:1,ch:'C',bpm:70},
   {id:'loop',t:'song',k:'Four-chord loop',wait:1},
@@ -488,27 +509,28 @@ const PATH=[
   {id:'dm',t:'chord',k:'Dm'},
   {id:'em',t:'chord',k:'Em'},
   {id:'dmaj',t:'chord',k:'D'},
+  {id:'cb-gcd',t:'combo',k:'G-C-D',slow:1,wait:1},
   {id:'d5',t:'drill',k:['Dm','G7'],goal:20},
   {id:'rec2',t:'record',l:'Record the same song again',d:'Play it next to your week 6 recording and hear how far you have come.'}]}
 ];
 const ALL=PATH.flatMap((w,wi)=>w.s.map(st=>(st.wk=wi,st)));
 const byId=id=>ALL.find(x=>x.id===id);
-function label(st){if(st.l)return st.l;switch(st.t){case 'tune':return 'Tune all four strings';case 'chord':return 'Learn '+st.k;case 'song':return 'Play '+st.k;case 'drill':return `${st.k[0]} to ${st.k[1]}: ${st.goal} changes in a minute`;case 'strum':return `${PAT[st.k].n} on ${st.ch} at ${st.bpm} BPM`}return ''}
-function desc(st){if(st.d)return st.d;switch(st.t){case 'tune':return 'Ticks off once all four strings read in tune.';case 'chord':return CH[st.k].h+'. Ticks off when Check my chord hears it clean.';case 'song':{const s=SONGS.find(x=>x.n===st.k);return 'Chords: '+[...new Set(s.b.map(x=>x[0]))].join(', ')+(st.slow||st.wait?'. Starts '+[st.slow?'slow':'',st.wait?'and waits for you at each change':''].filter(Boolean).join(' ')+'.':'.')}case 'drill':return 'Count only the clean ones. Ticks off when you reach the goal.';case 'strum':return 'Keep going for one minute without stopping.'}return ''}
+function label(st){if(st.l)return st.l;switch(st.t){case 'tune':return 'Tune all four strings';case 'chord':return 'Learn '+st.k;case 'song':return 'Play '+st.k;case 'combo':return 'Practise '+comboById(st.k).n+' together';case 'drill':return `${st.k[0]} to ${st.k[1]}: ${st.goal} changes in a minute`;case 'strum':return `${PAT[st.k].n} on ${st.ch} at ${st.bpm} BPM`}return ''}
+function desc(st){if(st.d)return st.d;switch(st.t){case 'tune':return 'Ticks off once all four strings read in tune.';case 'chord':return CH[st.k].h+'. Ticks off when Check my chord hears it clean.';case 'song':{const s=SONGS.find(x=>x.n===st.k);return 'Chords: '+[...new Set(s.b.map(x=>x[0]))].join(', ')+(st.slow||st.wait?'. Starts '+[st.slow?'slow':'',st.wait?'and waits for you at each change':''].filter(Boolean).join(' ')+'.':'.')}case 'combo':{const c=comboById(st.k);return 'Loops the changes, then speeds them up.'+(c.ready.length?' Gets you ready for '+short(c.ready)+'.':'')}case 'drill':return 'Count only the clean ones. Ticks off when you reach the goal.';case 'strum':return 'Keep going for one minute without stopping.'}return ''}
 const pill=st=>st.t==='chord'?`<i class="pill" style="${cv(st.k)}">${st.k}</i>`:'';
 function migrate(){const old=store.get('uke-ms',[]);return PATH.flatMap((w,i)=>old.includes(i)?w.s.map(x=>x.id):[])}
 const pathDone=new Set(store.get('uke-path',null)||migrate());
 function saveDone(){store.set('uke-path',[...pathDone]);drawPath()}
 function setDone(id,on){if(on)pathDone.add(id);else pathDone.delete(id);saveDone()}
 let toastT=null;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2600)}
-function match(st,k,x){switch(st.t){case 'chord':return st.k===k;case 'song':return st.k===k&&(!st.free||x.free);case 'drill':return((st.k[0]===k[0]&&st.k[1]===k[1])||(st.k[0]===k[1]&&st.k[1]===k[0]))&&x.n>=st.goal;case 'strum':return st.k===k&&x.bpm>=st.bpm;default:return true}}
+function match(st,k,x){switch(st.t){case 'chord':case 'combo':return st.k===k;case 'song':return st.k===k&&(!st.free||x.free);case 'drill':return((st.k[0]===k[0]&&st.k[1]===k[1])||(st.k[0]===k[1]&&st.k[1]===k[0]))&&x.n>=st.goal;case 'strum':return st.k===k&&x.bpm>=st.bpm;default:return true}}
 function autoDone(t,k,x){x=x||{};let hit=ALL.filter(st=>st.t===t&&!pathDone.has(st.id)&&match(st,k,x));if(t==='record')hit=hit.slice(0,1);if(!hit.length)return;hit.forEach(st=>pathDone.add(st.id));saveDone();toast('✓ '+label(hit[0]))}
 function stepRow(st){const d=pathDone.has(st.id);return `<li class="step${d?' done':''}"><input type="checkbox" id="st-${st.id}" data-id="${st.id}" ${d?'checked':''}><label for="st-${st.id}"><b>${pill(st)}${label(st)}</b><span>${desc(st)}</span></label>${st.t==='read'?'<span></span>':`<button class="go" type="button" data-step="${st.id}" aria-label="Go: ${label(st)}">Go</button>`}</li>`}
 function drawPath(){const open=new Set([...document.querySelectorAll('#weeks details[open]')].map(d=>+d.dataset.w));const next=ALL.find(st=>!pathDone.has(st.id)),n=ALL.filter(st=>pathDone.has(st.id)).length;
  $('#progFill').style.width=(n/ALL.length*100)+'%';$('#progBar').setAttribute('aria-valuemax',ALL.length);$('#progBar').setAttribute('aria-valuenow',n);$('#progTxt').textContent=`${n} of ${ALL.length} steps`;
  $('#today').innerHTML=next?`<p class="eyebrow">Up next · Week ${next.wk+1}, ${PATH[next.wk].w}</p><div class="tt">${pill(next)}${label(next)}</div><p class="note">${desc(next)}</p><div class="row" style="margin-top:12px">${next.t==='read'?`<button class="btn primary" type="button" data-done="${next.id}">Got it</button>`:`<button class="btn primary" type="button" data-step="${next.id}">Start</button><button class="btn" type="button" data-done="${next.id}">Mark done</button>`}</div>`:`<p class="eyebrow">All eight weeks done</p><div class="tt">You can play the ukulele.</div><p class="note">Keep one song a day going, try the island strum on every song, and add a new chord each week.</p>`;
  $('#weeks').innerHTML=PATH.map((w,wi)=>{const d=w.s.filter(st=>pathDone.has(st.id)).length,all=d===w.s.length;return `<details class="wk${all?' done':''}" data-w="${wi}" ${open.has(wi)||(next&&next.wk===wi)?'open':''}><summary><span class="wn">${all?'✓':wi+1}</span><span><b>Week ${wi+1}</b>${w.w}</span><span class="cnt">${d}/${w.s.length}</span></summary><ul class="steps">${w.s.map(stepRow).join('')}</ul></details>`}).join('')}
-function goStep(st){stopAll();switch(st.t){case 'tune':goTab('tune');break;case 'chord':setCh(st.k);goTab('chords');break;case 'drill':$('#dA').value=st.k[0];$('#dB').value=st.k[1];goTab('practice');break;case 'strum':pickPat(st.k);pickSCh(st.ch);setBpm(st.bpm);goTab('strum');break;case 'song':goTab('songs');openSong(SONGS.findIndex(x=>x.n===st.k),st);break;case 'record':goTab('practice');$('#lbHead').scrollIntoView({block:'start'});break}}
+function goStep(st){stopAll();switch(st.t){case 'tune':goTab('tune');break;case 'chord':setCh(st.k);goTab('chords');break;case 'drill':$('#dA').value=st.k[0];$('#dB').value=st.k[1];goTab('practice');break;case 'strum':pickPat(st.k);pickSCh(st.ch);setBpm(st.bpm);goTab('strum');break;case 'song':goTab('songs');openSong(SONGS.find(x=>x.n===st.k),st);break;case 'combo':goTab('songs');openSong(comboById(st.k),st);break;case 'record':goTab('practice');$('#lbHead').scrollIntoView({block:'start'});break}}
 $('section[data-tab=learn]').addEventListener('click',e=>{const g=e.target.closest('[data-step]');if(g){goStep(byId(g.dataset.step));return}const d=e.target.closest('[data-done]');if(d)setDone(d.dataset.done,true)});
 $('#weeks').addEventListener('change',e=>{const c=e.target.closest('input[data-id]');if(c)setDone(c.dataset.id,c.checked)});
 
