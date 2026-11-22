@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Uke School</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE everyday learning: warm, plain, made for musicians (bachable voice)
+   IDEA a pocket practice ukulele: tuner dial, chord cards, a metronome that strums with you
+   PICTURE the live tuner dial on Tune; big colour-coded chord cards everywhere else
+   COLOUR bachable zinc ground + orange-600 for every primary action; strings and chords colour-coded with Tailwind primitives as illustration
+   TYPE Inter 400-700, headings semibold, pills for every button and chip
+   LAYOUT one phone-width column, tabs pinned at the bottom; centred column on a laptop */
+:root{color-scheme:light dark;--bg:light-dark(#fcfcfc,#09090b);--bg2:light-dark(#f4f4f5,#000);--surf:light-dark(#fff,#18181b);--surf2:light-dark(#f4f4f5,#27272a);--ink:light-dark(#18181b,#fafafa);--muted:light-dark(#52525b,#a1a1aa);--line:light-dark(#e4e4e7,#27272a);--accent:#f54900;--accent-ink:light-dark(#c23a00,#ff8a4c);--accent-soft:light-dark(#ffedd4,#3a1606);--good:light-dark(#15803d,#4ade80);--warn:light-dark(#b45309,#fbbf24);--bad:light-dark(#dc2626,#f87171);--shadow:0 1px 2px rgb(0 0 0/.06),0 0 0 1px var(--line)}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--bg2);color:var(--ink);font:16px/1.55 Inter,system-ui,sans-serif;display:flex;justify-content:center;overflow-x:clip}
+.app{width:100%;max-width:560px;height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto;background:var(--bg);box-shadow:0 0 0 1px var(--line)}
+header{padding:calc(12px + env(safe-area-inset-top,0px)) 20px 0}
+.brand{display:flex;align-items:baseline;gap:8px}
+.brand h1{margin:0;font-size:22px;font-weight:700;letter-spacing:-.02em}
+.brand span{color:var(--muted);font-size:14px}
+.stripe{display:grid;grid-template-columns:repeat(4,1fr);height:5px;margin:12px -20px 0}
+.stripe i:nth-child(1){background:#f59e0b}.stripe i:nth-child(2){background:#f43f5e}.stripe i:nth-child(3){background:#0ea5e9}.stripe i:nth-child(4){background:#10b981}
+main{overflow-y:auto;padding:18px 16px 28px}
+section[data-tab]{display:none}
+section[data-tab].on{display:block}
+h2{font-size:28px;line-height:1.1;letter-spacing:-.02em;margin:0 0 6px;font-weight:600}
+h3{font-size:17px;margin:22px 0 8px;font-weight:600}
+p{margin:0 0 10px}
+.lead{color:var(--muted);margin-bottom:14px}
+.card{background:var(--surf);border-radius:24px;box-shadow:var(--shadow);padding:18px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button,select{font:500 15px Inter,system-ui,sans-serif;color:inherit}
+.btn{min-height:44px;padding:0 20px;border-radius:999px;border:0;background:var(--surf2);cursor:pointer}
+.btn.primary{background:var(--accent);color:#fff;font-weight:600;font-size:16px}
+.btn:hover{filter:brightness(.97)}
+.btn:focus-visible,.chip:focus-visible,.nav button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chip{min-height:40px;padding:0 16px;border-radius:999px;border:1.5px solid var(--line);background:var(--surf);cursor:pointer;font-weight:600}
+.chip[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink)}
+.cc{border:0;color:var(--t);background:var(--c)}
+.cc[aria-pressed=true]{outline:3px solid var(--ink);outline-offset:2px;background:var(--c);color:var(--t)}
+select{min-height:44px;border-radius:12px;border:1.5px solid var(--line);background:var(--surf);padding:0 12px;font-size:16px}
+.note{font-size:14px;color:var(--muted)}
+.alert{margin-top:12px;padding:12px 14px;border-radius:12px;background:var(--accent-soft);color:var(--ink);font-size:15px}
+.alert[hidden]{display:none}
+.file{display:inline-flex;align-items:center;min-height:44px;padding:0 20px;border-radius:999px;background:var(--surf2);cursor:pointer;font-weight:500;font-size:15px}
+.file input{position:absolute;width:1px;height:1px;opacity:0}
+.file:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+/* tuner */
+.dial{position:relative;margin:-4px auto 0;max-width:360px}
+.dial svg{display:block;width:100%;height:auto}
+.readout{text-align:center;margin-top:-6px}
+.readout b{display:block;font-size:clamp(34px,10vw,48px);line-height:1.05;letter-spacing:-.02em}
+.readout .say{font-weight:600;font-size:17px;margin-top:4px}
+[data-st=good] .say{color:var(--good)}[data-st=warn] .say{color:var(--warn)}[data-st=bad] .say{color:var(--bad)}
+.strings{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0 12px}
+.str{min-height:64px;border-radius:20px;border:0;cursor:pointer;background:var(--c);color:var(--t);font-size:24px;font-weight:700;display:grid;place-items:center;line-height:1}
+.str small{display:block;font-size:12px;font-weight:500;margin-top:2px}
+.str[aria-pressed=true]{outline:3px solid var(--ink);outline-offset:3px}
+.str.hit{transform:scale(1.05)}
+.results{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}
+.results li{display:flex;gap:12px;align-items:center;padding:10px 12px;border-radius:12px;background:var(--surf2)}
+.dot{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;flex:none;background:var(--c);color:var(--t)}
+/* chords */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:8px}
+.big{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;align-items:center}
+.swatch{border-radius:24px;background:var(--c);color:var(--t);padding:14px 16px 6px;display:grid;justify-items:center}
+.swatch .nm{font-size:34px;font-weight:700;line-height:1}
+.swatch svg{color:var(--t)}
+.bars{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:3px;align-items:end;height:92px;margin-top:12px}
+.bars div{display:grid;grid-template-rows:1fr auto;height:100%;text-align:center;font-size:11px;color:var(--muted)}
+.bars i{align-self:end;border-radius:4px 4px 0 0;background:var(--surf2);min-height:3px}
+.bars .ex i{background:var(--c)}
+.bars .ex{color:var(--ink);font-weight:600}
+@media(max-width:400px){.big{grid-template-columns:1fr}.swatch{justify-self:start}}
+/* strum */
+.slots{display:grid;gap:6px;margin:16px 0}
+.slot{border-radius:16px;background:var(--surf2);display:grid;justify-items:center;padding:8px 0 10px;gap:4px;transition:background .08s}
+.slot b{font-size:15px}.slot.and b{color:var(--muted);font-weight:500}
+.slot svg{width:26px;height:42px}
+.slot.now{background:var(--accent);color:#fff}.slot.now b{color:#fff}
+.tempo{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;margin:8px 0}
+.tempo output{font-size:28px;font-weight:700;letter-spacing:-.02em;white-space:nowrap}
+input[type=range]{width:100%;accent-color:var(--accent);height:44px}
+.sw{display:inline-flex;align-items:center;gap:8px;min-height:44px;font-weight:500}
+.sw input{width:20px;height:20px;accent-color:var(--accent)}
+/* songs */
+.songs{display:grid;gap:10px}
+.song{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;text-align:left;padding:14px 16px;border-radius:20px;border:0;background:var(--surf);box-shadow:var(--shadow);cursor:pointer;min-height:64px}
+.song b{font-size:17px}.song span{color:var(--muted);font-size:14px}
+.mini{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.mini i{font-style:normal;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--c);color:var(--t)}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center}
+.now{transition:background .1s}
+.beats{display:flex;gap:8px;margin-top:10px}
+.beats i{width:14px;height:14px;border-radius:50%;background:var(--surf2)}
+.beats i.on{background:var(--accent)}
+.next{text-align:center;color:var(--muted);font-size:14px}
+.next .swatch{padding:8px 12px;border-radius:16px;margin-top:4px}
+.next .nm{font-size:22px}
+.lyr{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;margin-top:14px}
+.bar{padding:8px 10px;border-radius:12px;background:var(--surf2);font-size:15px;min-height:58px}
+.bar em{font-style:normal;font-weight:700;font-size:13px;padding:1px 8px;border-radius:999px;background:var(--c);color:var(--t)}
+.bar.cur{background:var(--accent-soft);box-shadow:0 0 0 2px var(--accent)}
+.back{background:none;border:0;color:var(--accent-ink);font-weight:600;min-height:44px;padding:0;cursor:pointer}
+/* practice */
+.timer{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center}
+.ring{width:120px;height:120px}
+.tap{width:100%;min-height:96px;border-radius:24px;border:0;background:var(--accent);color:#fff;font-size:22px;font-weight:700;cursor:pointer}
+.tap:disabled{opacity:.5;cursor:default}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ms{list-style:none;padding:0;margin:0;display:grid;gap:4px}
+.ms label{display:flex;gap:12px;align-items:flex-start;padding:10px 4px;cursor:pointer}
+.ms input{width:20px;height:20px;margin-top:2px;accent-color:var(--accent);flex:none}
+audio{width:100%;margin-top:10px}
+/* nav */
+.nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid var(--line);background:var(--surf);padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav button{min-height:62px;border:0;background:none;display:grid;justify-items:center;align-content:center;gap:3px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer}
+.nav svg{width:22px;height:22px}
+.nav button[aria-current=page]{color:var(--accent-ink);font-weight:600}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}#needle{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="brand"><h1>Uke school</h1><span>by bachable</span></div>
+  <div class="stripe" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+</header>
+<main id="main">
+
+<section data-tab="tune" aria-labelledby="t-tune">
+  <h2 id="t-tune">Tune up</h2>
+  <p class="lead">Tap a string to hear its note. Then play that string and let the dial tell you which way to turn the peg.</p>
+  <div class="card" id="tuneCard" data-st="">
+    <div class="dial">
+      <svg viewBox="0 0 300 170" role="img" aria-label="Tuning dial, from flat on the left to sharp on the right">
+        <path d="M38 150 A112 112 0 0 1 262 150" fill="none" stroke="var(--surf2)" stroke-width="18" stroke-linecap="round"/>
+        <path id="zone" d="M140.3 38.4 A112 112 0 0 1 159.7 38.4" fill="none" stroke="var(--good)" stroke-width="18"/>
+        <g id="ticks"></g>
+        <text x="34" y="168" font-size="13" fill="var(--muted)" font-family="Inter">flat</text>
+        <text x="266" y="168" font-size="13" fill="var(--muted)" font-family="Inter" text-anchor="end">sharp</text>
+        <g id="needle" style="transition:transform .12s" transform="rotate(0 150 150)"><line x1="150" y1="150" x2="150" y2="46" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/></g>
+        <circle cx="150" cy="150" r="9" fill="var(--ink)"/>
+      </svg>
+    </div>
+    <div class="readout" aria-live="polite">
+      <b id="note">Pick a string</b>
+      <div class="note" id="hz">G C E A, from the string nearest your face</div>
+      <div class="say" id="say">&nbsp;</div>
+    </div>
+    <div class="strings" id="strings"></div>
+    <div class="row">
+      <button class="btn primary" id="listen" type="button">Listen with mic</button>
+      <label class="file">Check a recording<input type="file" id="tuneFile" accept="audio/*" capture></label>
+    </div>
+    <p class="alert" id="tuneBlocked" hidden>Live listening is blocked here, so record instead: pluck G, C, E and A one at a time with your phone's voice recorder, letting each ring for two seconds, then tap Check a recording.</p>
+    <ul class="results" id="tuneRes"></ul>
+  </div>
+  <h3>Tips for your uke</h3>
+  <p class="note">New strings stretch for a week or two, so tune before every song. If the note rises as you turn, you are tightening. Small turns, then pluck again.</p>
+</section>
+
+<section data-tab="chords" aria-labelledby="t-chords">
+  <h2 id="t-chords">Chords</h2>
+  <p class="lead">Learn them in this order. Tap one to see the shape and hear it, then strum yours and check it.</p>
+  <div class="grid" id="chordGrid"></div>
+  <div class="card" style="margin-top:14px">
+    <div class="big">
+      <div class="swatch" id="chSwatch"></div>
+      <div>
+        <p id="chHint" style="font-weight:600"></p>
+        <p class="note" id="chNotes"></p>
+        <div class="row" style="margin-top:8px">
+          <button class="btn" id="chPlay" type="button">Hear it</button>
+          <button class="btn primary" id="chCheck" type="button">Check my chord</button>
+        </div>
+        <div class="row" style="margin-top:8px"><label class="file">Check a recording<input type="file" id="chFile" accept="audio/*" capture></label></div>
+      </div>
+    </div>
+    <p class="alert" id="chBlocked" hidden>Live listening is blocked here. Record one clean strum with your phone's voice recorder and tap Check a recording.</p>
+    <div id="chOut" aria-live="polite"></div>
+  </div>
+</section>
+
+<section data-tab="strum" aria-labelledby="t-strum">
+  <h2 id="t-strum">Strum along</h2>
+  <p class="lead">Your hand never stops: down on the numbers, up on the "and"s. Faded arrows are strokes that miss the strings.</p>
+  <div class="row" id="patRow"></div>
+  <div class="slots" id="slots"></div>
+  <div class="card">
+    <div class="tempo"><button class="btn" id="bpmDown" type="button" aria-label="Slower">−</button><input type="range" id="bpm" min="50" max="140" step="5" value="70" aria-label="Tempo"><button class="btn" id="bpmUp" type="button" aria-label="Faster">+</button></div>
+    <div class="row" style="justify-content:space-between"><output id="bpmOut" for="bpm">70 BPM</output><button class="btn primary" id="sGo" type="button">Start</button></div>
+    <div class="row" style="margin-top:6px"><label class="sw"><input type="checkbox" id="sSound" checked> Strum sound</label><label class="sw"><input type="checkbox" id="sClick" checked> Click</label></div>
+    <p class="note" style="margin:10px 0 6px">Strum on this chord</p>
+    <div class="row" id="sChords"></div>
+  </div>
+</section>
+
+<section data-tab="songs" aria-labelledby="t-songs">
+  <div id="songList">
+    <h2 id="t-songs">Play-along songs</h2>
+    <p class="lead">One bar of clicks counts you in. The big card is the chord to play now; the small one is coming next.</p>
+    <div class="songs" id="songs"></div>
+    <h3>Singing while you play</h3>
+    <div class="card">
+      <ol style="margin:0;padding-left:20px;display:grid;gap:8px">
+        <li>Learn the chord changes with Backing uke on until your hands move without thinking.</li>
+        <li>Turn Backing uke off and play one down strum per bar while you hum the tune.</li>
+        <li>Find your first note: strum the first chord, then hum until your voice blends with it.</li>
+        <li>Sing the words. If your strumming stops, drop back to one strum per bar; the voice leads, the uke follows.</li>
+      </ol>
+    </div>
+  </div>
+  <div id="player" hidden>
+    <button class="back" id="pBack" type="button">← All songs</button>
+    <h2 id="pTitle"></h2>
+    <div class="card">
+      <div class="stage">
+        <div><div class="swatch now" id="pNow"></div><div class="beats" id="pBeats"></div></div>
+        <div class="next">Next<div class="swatch" id="pNext"></div></div>
+      </div>
+      <div class="tempo"><span class="note">Tempo</span><input type="range" id="pBpm" min="50" max="130" step="2" aria-label="Song tempo"><output id="pBpmOut"></output></div>
+      <div class="row" style="justify-content:space-between"><label class="sw"><input type="checkbox" id="pSound" checked> Backing uke</label><button class="btn primary" id="pGo" type="button">Play</button></div>
+      <div class="lyr" id="pLyr"></div>
+    </div>
+  </div>
+</section>
+
+<section data-tab="practice" aria-labelledby="t-practice">
+  <h2 id="t-practice">One-minute changes</h2>
+  <p class="lead">Switch between two chords for a minute and tap the big button every time you land a clean one. Aim for 30.</p>
+  <div class="card">
+    <div class="row"><select id="dA" aria-label="First chord"></select><span>to</span><select id="dB" aria-label="Second chord"></select><button class="btn" id="dHear" type="button">Hear both</button></div>
+    <div class="timer" style="margin-top:14px">
+      <svg class="ring" viewBox="0 0 120 120" role="img" aria-label="Time left"><circle cx="60" cy="60" r="52" fill="none" stroke="var(--surf2)" stroke-width="10"/><circle id="ringArc" cx="60" cy="60" r="52" fill="none" stroke="var(--accent)" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="0" transform="rotate(-90 60 60)"/><text id="ringT" x="60" y="68" text-anchor="middle" font-size="26" font-weight="700" fill="var(--ink)" font-family="Inter">60</text></svg>
+      <div><p style="font-size:40px;font-weight:700;line-height:1;margin:0" id="dCount">0</p><p class="note">clean changes</p><button class="btn primary" id="dGo" type="button">Start the minute</button></div>
+    </div>
+    <button class="tap" id="tap" type="button" disabled style="margin-top:14px">Changed!</button>
+  </div>
+  <h3>Your results</h3>
+  <div id="dLog"></div>
+  <h3>Eight-week milestones</h3>
+  <ul class="ms" id="ms"></ul>
+  <h3>Listen back</h3>
+  <p class="note">Record yourself with your phone, then load it here to listen. Recordings stay on your device.</p>
+  <label class="file">Load a recording<input type="file" id="lbFile" accept="audio/*" capture></label>
+  <audio id="lbAudio" controls hidden></audio>
+</section>
+</main>
+<nav class="nav" aria-label="Sections">
+  <button type="button" data-go="tune"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 17a8 8 0 0 1 16 0"/><path d="M12 17l4-6"/></svg>Tune</button>
+  <button type="button" data-go="chords"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M10 3v18M14 3v18M5 9h14M5 15h14"/></svg>Chords</button>
+  <button type="button" data-go="strum"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v14m-3-3 3 3 3-3M17 20V6m-3 3 3-3 3 3"/></svg>Strum</button>
+  <button type="button" data-go="songs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="7" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M10 18V5l11-2v13"/></svg>Songs</button>
+  <button type="button" data-go="practice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg>Practice</button>
+</nav>
+</div>
+<script>
+{
+const $=s=>document.querySelector(s);
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const OPEN=[67,60,64,69],SN=['G','C','E','A'],SC=['#f59e0b','#f43f5e','#0ea5e9','#10b981'],ST=['#18181b','#fff','#18181b','#18181b'];
+const NAMES=['C','C♯','D','E♭','E','F','F♯','G','A♭','A','B♭','B'];
+const D='#18181b',W='#fff';
+const CH={
+ C:{f:[0,0,0,3],c:'#f59e0b',t:D,h:'Ring finger on the A string, fret 3'},
+ Am:{f:[2,0,0,0],c:'#8b5cf6',t:W,h:'Middle finger on the G string, fret 2'},
+ F:{f:[2,0,1,0],c:'#10b981',t:D,h:'Middle on G fret 2, index on E fret 1'},
+ G7:{f:[0,2,1,2],c:'#3b82f6',t:W,h:'Middle on C2, index on E1, ring on A2'},
+ G:{f:[0,2,3,2],c:'#0ea5e9',t:D,h:'Index on C2, middle on A2, ring on E3'},
+ C7:{f:[0,0,0,1],c:'#f43f5e',t:W,h:'Index finger on the A string, fret 1'},
+ Dm:{f:[2,2,1,0],c:'#ec4899',t:W,h:'Middle G2, ring C2, index E1'},
+ Em:{f:[0,4,3,2],c:'#14b8a6',t:D,h:'Index A2, middle E3, ring C4'},
+ D:{f:[2,2,2,0],c:'#84cc16',t:D,h:'Index G2, middle C2, ring E2'},
+ A:{f:[2,1,0,0],c:'#eab308',t:D,h:'Middle G2, index C1'},
+ E7:{f:[1,2,0,2],c:'#6366f1',t:W,h:'Index G1, middle C2, ring A2'},
+ 'B♭':{f:[3,2,1,1],c:'#a855f7',t:W,h:'Index flat across fret 1, middle C2, ring G3',barre:1}
+};
+const ORDER=Object.keys(CH);
+const mf=m=>440*2**((m-69)/12);
+const pcs=n=>[...new Set(CH[n].f.map((v,i)=>(OPEN[i]+v)%12))];
+const cv=n=>`--c:${CH[n].c};--t:${CH[n].t}`;
+
+/* audio */
+let ctx=null;
+function ac(){if(!ctx){const A=window.AudioContext||window.webkitAudioContext;ctx=new A()}if(ctx.state==='suspended')ctx.resume();return ctx}
+function pluck(f,t,v,d){const a=ac();const o=a.createOscillator(),g=a.createGain(),lp=a.createBiquadFilter();o.type='triangle';o.frequency.value=f;lp.type='lowpass';lp.frequency.setValueAtTime(f*6,t);lp.frequency.exponentialRampToValueAtTime(Math.max(f*1.5,300),t+d);g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v,t+0.006);g.gain.exponentialRampToValueAtTime(0.0001,t+d);o.connect(lp);lp.connect(g);g.connect(a.destination);o.start(t);o.stop(t+d+0.05)}
+function strum(n,t,up,v){const f=CH[n].f;const idx=up?[3,2,1,0]:[0,1,2,3];idx.forEach((s,k)=>pluck(mf(OPEN[s]+f[s]),t+k*0.018,(up?0.7:1)*(v||0.18),1.4))}
+function click(t,acc){const a=ac();const o=a.createOscillator(),g=a.createGain();o.frequency.value=acc?1600:1100;g.gain.setValueAtTime(acc?0.22:0.12,t);g.gain.exponentialRampToValueAtTime(0.0001,t+0.04);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+0.05)}
+
+/* pitch + chroma */
+function detect(b,sr){const n=b.length;let e0=0;for(let i=0;i<n;i++)e0+=b[i]*b[i];if(Math.sqrt(e0/n)<0.008)return -1;const mn=Math.floor(sr/1100),mx=Math.ceil(sr/170),Wn=n-mx-2;if(Wn<256)return -1;const r=new Float32Array(mx+2);let best=0;for(let L=mn;L<=mx+1;L++){let s=0,e=0;for(let j=0;j<Wn;j++){const x=b[j],y=b[j+L];s+=x*y;e+=x*x+y*y}r[L]=e?2*s/e:0;if(L<=mx&&r[L]>best)best=r[L]}if(best<0.6)return -1;const k=best*0.92;let T=-1;for(let L=mn+1;L<=mx;L++){if(r[L]>=k&&r[L]>=r[L-1]&&r[L]>=r[L+1]){T=L;break}}if(T<0)return -1;const p=r[T-1],q=r[T],u=r[T+1],den=p-2*q+u;return sr/(T+(den?0.5*(p-u)/den:0))}
+function info(f,tgt){const m=69+12*Math.log2(f/440);let s=0;if(tgt!=null)s=tgt;else{let bd=99;OPEN.forEach((o,i)=>{const dd=Math.abs(m-o);if(dd<bd){bd=dd;s=i}})}const r=Math.round(m);return{s,cents:(m-OPEN[s])*100,name:NAMES[((r%12)+12)%12]+(Math.floor(r/12)-1)}}
+function chroma(b,sr){const n=b.length,pc=new Array(12).fill(0);const w=new Float32Array(n);for(let i=0;i<n;i++)w[i]=b[i]*(0.5-0.5*Math.cos(2*Math.PI*i/(n-1)));for(let m=55;m<=88;m++){const co=2*Math.cos(2*Math.PI*mf(m)/sr);let s1=0,s2=0;for(let i=0;i<n;i++){const s0=w[i]+co*s1-s2;s2=s1;s1=s0}pc[m%12]+=s1*s1+s2*s2-co*s1*s2}const t=pc.reduce((x,y)=>x+y,0)||1;return pc.map(x=>x/t)}
+async function mic(size){try{if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return null;const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});const a=ac();const an=a.createAnalyser();an.fftSize=size;a.createMediaStreamSource(st).connect(an);return{st,an}}catch(e){return null}}
+async function decode(file){const ab=await file.arrayBuffer();return await ac().decodeAudioData(ab)}
+
+/* tuner */
+let live=null,target=null;
+$('#ticks').innerHTML=[-50,-40,-30,-20,-10,0,10,20,30,40,50].map(c=>{const a=(c*1.6-90)*Math.PI/180,r1=c%50?92:86,r2=102;return `<line x1="${150+r1*Math.cos(a)}" y1="${150+r1*Math.sin(a)}" x2="${150+r2*Math.cos(a)}" y2="${150+r2*Math.sin(a)}" stroke="var(--muted)" stroke-width="${c?1.5:3}"/>`}).join('');
+$('#strings').innerHTML=SN.map((n,i)=>`<button class="str" type="button" data-s="${i}" aria-pressed="false" style="--c:${SC[i]};--t:${ST[i]}">${n}<small>${['G4','C4','E4','A4'][i]}</small></button>`).join('');
+$('#strings').addEventListener('click',e=>{const b=e.target.closest('.str');if(!b)return;const i=+b.dataset.s;target=target===i?null:i;document.querySelectorAll('.str').forEach(x=>x.setAttribute('aria-pressed',String(+x.dataset.s===target)));pluck(mf(OPEN[i]),ac().currentTime+0.02,0.3,2.4);if(target!=null&&!live){$('#note').textContent=SN[i]+' string';$('#hz').textContent=`Should sound ${['G4','C4','E4','A4'][i]}, ${mf(OPEN[i]).toFixed(1)} Hz`;$('#say').textContent='Now play it and tap Listen'}});
+function verdict(c){const a=Math.abs(c);if(a<=5)return['good','In tune. On to the next string.'];if(a>60)return['bad',c<0?'Far too low: tighten more':'Far too high: loosen more'];return[a<=15?'warn':'bad',c<0?'Too low: tighten the peg a little':'Too high: loosen the peg a little']}
+function showTune(x,f){const c=Math.max(-50,Math.min(50,x.cents));$('#needle').setAttribute('transform',`rotate(${c*1.6} 150 150)`);const v=verdict(x.cents);$('#tuneCard').dataset.st=v[0];$('#note').textContent=SN[x.s]+' string';$('#hz').textContent=`Heard ${x.name}, ${f.toFixed(1)} Hz, ${x.cents>0?'+':''}${Math.round(x.cents)} cents`;$('#say').textContent=v[1];document.querySelectorAll('.str').forEach(b=>b.classList.toggle('hit',+b.dataset.s===x.s))}
+function stopLive(){if(!live)return;cancelAnimationFrame(live.raf);live.st.getTracks().forEach(t=>t.stop());live=null;$('#listen').textContent='Listen with mic'}
+$('#listen').addEventListener('click',async()=>{if(live){stopLive();return}const m=await mic(4096);if(!m){$('#tuneBlocked').hidden=false;return}live=m;$('#listen').textContent='Stop listening';const buf=new Float32Array(4096),hist=[];const loop=()=>{if(!live)return;m.an.getFloatTimeDomainData(buf);const f=detect(buf,ctx.sampleRate);if(f>0){hist.push(f);if(hist.length>5)hist.shift();const s=[...hist].sort((p,q)=>p-q)[hist.length>>1];showTune(info(s,target),s)}live.raf=requestAnimationFrame(loop)};loop()});
+$('#tuneFile').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;const out=$('#tuneRes');out.innerHTML='<li>Listening to your recording…</li>';try{const au=await decode(file);const sr=au.sampleRate,d=au.getChannelData(0),N=2048,end=Math.min(d.length-N,sr*15);const segs=[];let cur=null;for(let i=0;i<end;i+=1024){const f=detect(d.subarray(i,i+N),sr);const x=f>0?info(f,null):null;if(x&&Math.abs(x.cents)<150){if(cur&&cur.s===x.s)cur.c.push(x.cents);else{cur={s:x.s,c:[x.cents]};segs.push(cur)}}else cur=null}const res=segs.filter(s=>s.c.length>=4).map(s=>({s:s.s,c:[...s.c].sort((p,q)=>p-q)[s.c.length>>1]}));out.innerHTML=res.length?res.map(r=>{const v=verdict(r.c);return `<li><span class="dot" style="--c:${SC[r.s]};--t:${ST[r.s]}">${SN[r.s]}</span><span><b>${r.c>0?'+':''}${Math.round(r.c)} cents</b><br><span class="note" style="color:var(--${v[0]})">${v[1]}</span></span></li>`}).join(''):'<li>No clear note found. Pluck one string at a time and let each ring for two seconds.</li>';if(res.length){const l=res[res.length-1];showTune({s:l.s,cents:l.c,name:SN[l.s]},mf(OPEN[l.s]+l.c/100))}}catch(err){out.innerHTML='<li>That file could not be read. Try a different recording format, such as m4a or mp3.</li>'}e.target.value=''});
+
+/* chord diagrams */
+function dia(n,w){const c=CH[n],f=c.f,sx=w/5,y0=26,fh=sx*1.15,h=y0+fh*5+22;let s=`<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="${n} chord: ${c.h}">`;for(let i=0;i<4;i++){const x=sx*(i+1);s+=`<line x1="${x}" y1="${y0}" x2="${x}" y2="${y0+fh*5}" stroke="currentColor" stroke-opacity=".55" stroke-width="1.5"/><text x="${x}" y="${h-4}" text-anchor="middle" font-size="12" fill="currentColor" font-family="Inter">${SN[i]}</text>`}for(let k=1;k<=5;k++){const y=y0+fh*k;s+=`<line x1="${sx}" y1="${y}" x2="${sx*4}" y2="${y}" stroke="currentColor" stroke-opacity=".35"/>`}s+=`<line x1="${sx-1}" y1="${y0}" x2="${sx*4+1}" y2="${y0}" stroke="currentColor" stroke-width="5"/>`;if(c.barre)s+=`<rect x="${sx*0.62}" y="${y0+fh*0.5-sx*0.28}" width="${sx*3.76}" height="${sx*0.56}" rx="${sx*0.28}" fill="currentColor"/>`;f.forEach((v,i)=>{const x=sx*(i+1);s+=v===0?`<circle cx="${x}" cy="${y0-11}" r="${sx*0.17}" fill="none" stroke="currentColor" stroke-width="1.5"/>`:`<circle cx="${x}" cy="${y0+fh*(v-0.5)}" r="${sx*0.3}" fill="currentColor"/>`});return s+'</svg>'}
+function swatch(el,n,w){el.style.cssText=cv(n);el.innerHTML=`<span class="nm">${n}</span>${dia(n,w)}`}
+
+/* chords tab */
+let curCh='C';
+$('#chordGrid').innerHTML=ORDER.map(n=>`<button class="chip cc" type="button" data-ch="${n}" style="${cv(n)}" aria-pressed="${n===curCh}">${n}</button>`).join('');
+function setCh(n){curCh=n;document.querySelectorAll('#chordGrid .chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.ch===n)));swatch($('#chSwatch'),n,120);$('#chHint').textContent=CH[n].h;$('#chNotes').textContent='Notes: '+pcs(n).map(p=>NAMES[p]).join(', ');$('#chOut').innerHTML=''}
+$('#chordGrid').addEventListener('click',e=>{const b=e.target.closest('[data-ch]');if(b){setCh(b.dataset.ch);strum(b.dataset.ch,ac().currentTime+0.03,false,0.22)}});
+$('#chPlay').addEventListener('click',()=>{const t=ac().currentTime+0.03;strum(curCh,t,false,0.22);strum(curCh,t+0.6,false,0.22)});
+function judge(pc){const ex=pcs(curCh);const inS=ex.reduce((a,p)=>a+pc[p],0);const miss=ex.filter(p=>pc[p]<0.05);const score=n=>pcs(n).reduce((a,p)=>a+pc[p],0)/Math.sqrt(pcs(n).length);const near=ORDER.slice().sort((x,y)=>score(y)-score(x))[0];let msg,st;if(inS>=0.72&&!miss.length){st='good';msg=`Sounds like a clean ${curCh}. Nice.`}else if(inS>=0.5){st='warn';const strs=CH[curCh].f.map((v,i)=>miss.includes((OPEN[i]+v)%12)?SN[i]:null).filter(Boolean);msg=`Close. ${strs.length?'Listen to the '+strs.join(' and ')+' string: it may be muted or buzzing.':'One string may be off; pluck each one to check.'}`}else{st='bad';msg=`Not quite yet. It sounds closer to ${near}. Check your fingers against the diagram and your tuning.`}
+ $('#chOut').innerHTML=`<p style="margin-top:14px;font-weight:600;color:var(--${st})">${msg}</p><div class="bars" style="${cv(curCh)}">${pc.map((v,i)=>`<div class="${ex.includes(i)?'ex':''}"><i style="height:${Math.max(3,Math.min(100,v*220))}%"></i>${NAMES[i]}</div>`).join('')}</div><p class="note" style="margin-top:6px">Coloured bars are the notes ${curCh} needs. An estimate from your microphone, so tune first.</p>`}
+$('#chCheck').addEventListener('click',async()=>{const m=await mic(8192);if(!m){$('#chBlocked').hidden=false;return}const out=$('#chOut');let n=3;out.innerHTML=`<p style="margin-top:14px;font-size:22px;font-weight:700">Strum in ${n}</p>`;const iv=setInterval(()=>{n--;if(n>0){out.firstChild.textContent=`Strum in ${n}`;return}clearInterval(iv);out.firstChild.textContent='Strum now!';setTimeout(()=>{const b=new Float32Array(8192);m.an.getFloatTimeDomainData(b);m.st.getTracks().forEach(t=>t.stop());judge(chroma(b,ctx.sampleRate))},450)},700)});
+$('#chFile').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;$('#chOut').innerHTML='<p style="margin-top:14px">Listening to your recording…</p>';try{const au=await decode(file);const d=au.getChannelData(0),sr=au.sampleRate;let pk=0,pv=0;for(let i=0;i+2048<d.length;i+=1024){let e2=0;for(let j=i;j<i+2048;j++)e2+=d[j]*d[j];if(e2>pv){pv=e2;pk=i}}const st=Math.min(pk+Math.floor(sr*0.08),Math.max(0,d.length-8192));judge(chroma(d.slice(st,st+8192),sr))}catch(err){$('#chOut').innerHTML='<p style="margin-top:14px">That file could not be read. Try an m4a or mp3 recording.</p>'}e.target.value=''});
+
+/* engine */
+const E={on:false};
+function engStop(){if(E.timer)clearInterval(E.timer);E.timer=null;E.on=false}
+function engStart(o){engStop();const a=ac();E.on=true;E.o=o;E.slot=0;E.bar=o.countIn?-1:0;E.t=a.currentTime+0.15;E.timer=setInterval(tick,25);tick()}
+function tick(){const a=ctx,o=E.o;while(E.on&&E.t<a.currentTime+0.12){const pat=o.pattern(),dur=60/o.bpm()/2,s=E.slot,b=E.bar,t=E.t;const ch=b<0?null:o.chord(b);if(s%2===0&&(o.click()||b<0))click(t,s===0);const k=pat[s];if(ch&&o.sound()&&(k==='D'||k==='U'))strum(ch,t,k==='U');setTimeout(()=>{if(E.on)o.ui(s,b,ch)},Math.max(0,(t-a.currentTime)*1000));E.t+=dur;E.slot++;if(E.slot>=pat.length){E.slot=0;E.bar++;if(o.bars&&E.bar>=o.bars){const left=Math.max(0,(E.t-a.currentTime)*1000);engStop();setTimeout(()=>o.done&&o.done(),left);break}}}}
+const arrow=(up,on)=>`<svg viewBox="0 0 26 42" aria-hidden="true"><path d="${up?'M13 38V6M5 14l8-8 8 8':'M13 4v32M5 28l8 8 8-8'}" fill="none" stroke="currentColor" stroke-width="${on?3.5:2}" stroke-linecap="round" stroke-linejoin="round" ${on?'':'stroke-dasharray="3 5" opacity=".45"'}/></svg>`;
+
+/* strum tab */
+const PAT=[{n:'Four downs',p:'D.D.D.D.'},{n:'Down-up',p:'DUDUDUDU'},{n:'Folk strum',p:'D.DUD.DU'},{n:'Island strum',p:'D.DU.UDU'},{n:'Waltz',p:'D.D.D.'},{n:'Waltz down-up',p:'D.DUDU'}];
+let pi=3,sCh='C';
+function drawSlots(){const p=PAT[pi].p;const lab=['1','&','2','&','3','&','4','&'];$('#slots').style.gridTemplateColumns=`repeat(${p.length},minmax(0,1fr))`;$('#slots').innerHTML=[...p].map((k,i)=>`<div class="slot ${i%2?'and':''}" data-i="${i}"><b>${lab[i]}</b>${arrow(i%2===1,k!=='.')}</div>`).join('')}
+$('#patRow').innerHTML=PAT.map((x,i)=>`<button class="chip" type="button" data-p="${i}" aria-pressed="${i===pi}">${x.n}</button>`).join('');
+$('#patRow').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(!b)return;pi=+b.dataset.p;document.querySelectorAll('#patRow .chip').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));drawSlots();if(E.on&&E.o.tag==='strum')E.slot=0});
+$('#sChords').innerHTML=ORDER.slice(0,6).map(n=>`<button class="chip cc" type="button" data-ch="${n}" style="${cv(n)}" aria-pressed="${n===sCh}">${n}</button>`).join('');
+$('#sChords').addEventListener('click',e=>{const b=e.target.closest('[data-ch]');if(!b)return;sCh=b.dataset.ch;document.querySelectorAll('#sChords .chip').forEach(x=>x.setAttribute('aria-pressed',String(x===b)))});
+const setBpm=v=>{$('#bpm').value=v;$('#bpmOut').textContent=$('#bpm').value+' BPM'};
+$('#bpm').addEventListener('input',()=>setBpm($('#bpm').value));
+$('#bpmDown').addEventListener('click',()=>setBpm(+$('#bpm').value-5));
+$('#bpmUp').addEventListener('click',()=>setBpm(+$('#bpm').value+5));
+function stopAll(){engStop();$('#sGo').textContent='Start';$('#pGo').textContent='Play';document.querySelectorAll('.slot.now').forEach(x=>x.classList.remove('now'))}
+$('#sGo').addEventListener('click',()=>{if(E.on&&E.o.tag==='strum'){stopAll();return}stopAll();$('#sGo').textContent='Stop';engStart({tag:'strum',bpm:()=>+$('#bpm').value,pattern:()=>PAT[pi].p,chord:()=>sCh,sound:()=>$('#sSound').checked,click:()=>$('#sClick').checked,ui:s=>{document.querySelectorAll('.slot').forEach(x=>x.classList.toggle('now',+x.dataset.i===s))}})});
+
+/* songs */
+const SONGS=[
+ {n:'Four-chord loop',m:4,bpm:84,b:[['C',''],['G',''],['Am',''],['F',''],['C',''],['G',''],['Am',''],['F','']]},
+ {n:'Row, Row, Row Your Boat',m:4,bpm:90,b:[['C','Row, row, row your boat,'],['C','gently down the stream.'],['C','Merrily, merrily,'],['C','merrily, merrily,'],['G7','life is but a'],['C','dream.']]},
+ {n:'Skip to My Lou',m:4,bpm:100,b:[['C','Lou, Lou,'],['C','skip to my Lou,'],['G7','Lou, Lou,'],['G7','skip to my Lou,'],['C','Lou, Lou,'],['C','skip to my Lou,'],['G7','skip to my Lou, my'],['C','darling.']]},
+ {n:'Down in the Valley',m:3,bpm:84,b:[['C','Down in the'],['C','valley, the'],['C','valley so'],['G7','low,'],['G7','Hang your head'],['G7','over, hear the'],['G7','wind'],['C','blow.']]},
+ {n:'Oh My Darling, Clementine',m:3,bpm:96,b:[['C','In a cavern,'],['C','in a canyon,'],['C','excavating'],['G7','for a mine,'],['C','Dwelt a miner,'],['C','forty-niner,'],['G7','and his daughter,'],['C','Clementine.'],['C','Oh my darling,'],['C','oh my darling,'],['C','oh my darling,'],['G7','Clementine,'],['C','You are lost and'],['C','gone forever,'],['G7','dreadful sorry,'],['C','Clementine.']]},
+ {n:'When the Saints Go Marching In',m:4,bpm:96,b:[['C','Oh, when the saints'],['C','go marching in,'],['C','oh, when the saints'],['G7','go marching in,'],['C','Oh Lord, I want'],['C7','to be in that'],['F','number,'],['F',''],['C','when the saints'],['G7','go marching'],['C','in.'],['C','']]},
+ {n:'Oh! Susanna',m:4,bpm:100,b:[['C','I come from Alabama'],['C','with my'],['G7','banjo on my knee,'],['G7',''],['C',"I'm going to Louisiana,"],['C','my'],['G7','true love for to'],['C','see.'],['F','Oh, Susanna,'],['F',''],['C',"oh, don't you cry for"],['G7','me,'],['C','For I come from Alabama'],['C','with my'],['G7','banjo on my'],['C','knee.']]},
+ {n:'Amazing Grace',m:3,bpm:72,b:[['C','Amazing'],['C','grace, how'],['C7','sweet the'],['F','sound, that'],['C','saved a'],['C','wretch like'],['G7','me.'],['G7','I'],['C','once was'],['C','lost, but'],['C7','now am'],['F','found, was'],['C','blind, but'],['G7','now I'],['C','see.'],['C','']]}
+];
+$('#songs').innerHTML=SONGS.map((s,i)=>{const cs=[...new Set(s.b.map(x=>x[0]))];return `<button class="song" type="button" data-s="${i}"><b>${s.n}</b><span class="mini">${cs.map(c=>`<i style="${cv(c)}">${c}</i>`).join('')}</span><span>${s.m}/4 time, ${s.bpm} BPM</span></button>`}).join('');
+let song=null,lastBar=-2;
+function stage(b){const cur=b<0?song.b[0][0]:song.b[b][0],nx=song.b[Math.min(song.b.length-1,b+1)][0];swatch($('#pNow'),cur,96);swatch($('#pNext'),nx,56);document.querySelectorAll('.bar').forEach(x=>x.classList.toggle('cur',+x.dataset.b===b));const el=document.querySelector(`.bar[data-b="${b}"]`);if(el)el.scrollIntoView({block:'nearest',behavior:'smooth'})}
+function beats(n,on){$('#pBeats').innerHTML=Array.from({length:n},(_,i)=>`<i class="${i===on?'on':''}"></i>`).join('')}
+$('#songs').addEventListener('click',e=>{const b=e.target.closest('[data-s]');if(!b)return;stopAll();song=SONGS[+b.dataset.s];$('#songList').hidden=true;$('#player').hidden=false;$('#pTitle').textContent=song.n;$('#pBpm').value=song.bpm;$('#pBpmOut').textContent=song.bpm+' BPM';$('#pLyr').innerHTML=song.b.map((x,i)=>`<div class="bar" data-b="${i}" style="${cv(x[0])}"><em>${x[0]}</em><br>${x[1]||'&nbsp;'}</div>`).join('');stage(-1);beats(song.m,-1);$('#main').scrollTop=0});
+$('#pBack').addEventListener('click',()=>{stopAll();$('#player').hidden=true;$('#songList').hidden=false});
+$('#pBpm').addEventListener('input',()=>$('#pBpmOut').textContent=$('#pBpm').value+' BPM');
+$('#pGo').addEventListener('click',()=>{if(E.on&&E.o.tag==='song'){stopAll();return}stopAll();$('#pGo').textContent='Stop';lastBar=-2;engStart({tag:'song',countIn:true,bars:song.b.length,bpm:()=>+$('#pBpm').value,pattern:()=>song.m===3?'D.D.D.':'D.DUD.DU',chord:b=>song.b[b][0],sound:()=>$('#pSound').checked,click:()=>true,ui:(s,b)=>{if(b!==lastBar){lastBar=b;stage(b)}beats(song.m,s>>1)},done:()=>{$('#pGo').textContent='Play again';beats(song.m,-1)}})});
+
+/* practice */
+const opts=ORDER.map(n=>`<option>${n}</option>`).join('');$('#dA').innerHTML=opts;$('#dB').innerHTML=opts;$('#dA').value='C';$('#dB').value='Am';
+$('#dHear').addEventListener('click',()=>{const t=ac().currentTime+0.03;strum($('#dA').value,t,false,0.22);strum($('#dB').value,t+0.9,false,0.22)});
+let dn=0,dRun=null;
+function drawLog(){const L=store.get('uke-drill',[]);if(!L.length){$('#dLog').innerHTML='<p class="note">No minutes logged yet. Your first one will show up here, with your best score for each pair.</p>';return}const best={};L.forEach(r=>{const k=r.a+' to '+r.b;best[k]=Math.max(best[k]||0,r.n)});$('#dLog').innerHTML=`<div class="scroll"><table><thead><tr><th>Date</th><th>Pair</th><th style="text-align:right">Changes</th><th style="text-align:right">Best</th></tr></thead><tbody>${L.slice(-8).reverse().map(r=>`<tr><td>${r.d}</td><td>${r.a} to ${r.b}</td><td class="n">${r.n}</td><td class="n">${best[r.a+' to '+r.b]}</td></tr>`).join('')}</tbody></table></div>`}
+$('#dGo').addEventListener('click',()=>{if(dRun){clearInterval(dRun);dRun=null;$('#tap').disabled=true;$('#dGo').textContent='Start the minute';return}dn=0;$('#dCount').textContent='0';$('#tap').disabled=false;$('#dGo').textContent='Stop';const t0=Date.now();dRun=setInterval(()=>{const left=Math.max(0,60-(Date.now()-t0)/1000);$('#ringT').textContent=Math.ceil(left);$('#ringArc').setAttribute('stroke-dashoffset',String(326.7*(1-left/60)));if(left<=0){clearInterval(dRun);dRun=null;$('#tap').disabled=true;$('#dGo').textContent='Start the minute';click(ac().currentTime+0.02,true);const L=store.get('uke-drill',[]);L.push({d:new Date().toISOString().slice(0,10),a:$('#dA').value,b:$('#dB').value,n:dn});store.set('uke-drill',L.slice(-60));drawLog()}},100)});
+$('#tap').addEventListener('click',()=>{dn++;$('#dCount').textContent=dn});
+const MS=['Week 1: tune by myself, clean C and Am','Week 2: 30 C to Am changes in a minute, Row, Row, Row Your Boat','Week 3: F and G7, When the Saints','Week 4: G, the four-chord loop without stopping','Week 5: island strum at 70 BPM','Week 6: four songs from start to finish','Week 7: two melodies from tab','Week 8: Dm, D and Em, and a recording of myself'];
+const done=store.get('uke-ms',[]);
+$('#ms').innerHTML=MS.map((m,i)=>`<li><label><input type="checkbox" data-m="${i}" ${done.includes(i)?'checked':''}><span>${m}</span></label></li>`).join('');
+$('#ms').addEventListener('change',()=>store.set('uke-ms',[...document.querySelectorAll('#ms input:checked')].map(x=>+x.dataset.m)));
+$('#lbFile').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const a=$('#lbAudio');a.src=URL.createObjectURL(f);a.hidden=false});
+
+/* tabs */
+const TABS=['tune','chords','strum','songs','practice'];
+function show(t){if(!TABS.includes(t))t='tune';document.querySelectorAll('section[data-tab]').forEach(s=>s.classList.toggle('on',s.dataset.tab===t));document.querySelectorAll('.nav button').forEach(b=>{if(b.dataset.go===t)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});$('#main').scrollTop=0;if(t!=='tune')stopLive()}
+document.querySelector('.nav').addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(!b)return;stopAll();if(location.hash!=='#'+b.dataset.go)location.hash=b.dataset.go;else show(b.dataset.go)});
+window.addEventListener('hashchange',()=>show(location.hash.slice(1)));
+setCh('C');drawSlots();drawLog();show(location.hash.slice(1));
+}
+</script>
+</body>
+</html>
