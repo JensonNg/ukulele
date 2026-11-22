@@ -121,11 +121,43 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .ms input{width:20px;height:20px;margin-top:2px;accent-color:var(--accent);flex:none}
 audio{width:100%;margin-top:10px}
 /* nav */
-.nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid var(--line);background:var(--surf);padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border-top:1px solid var(--line);background:var(--surf);padding-bottom:env(safe-area-inset-bottom,0px)}
 .nav button{min-height:62px;border:0;background:none;display:grid;justify-items:center;align-content:center;gap:3px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer}
 .nav svg{width:22px;height:22px}
 .nav button[aria-current=page]{color:var(--accent-ink);font-weight:600}
-@media(prefers-reduced-motion:reduce){*{transition:none!important}#needle{transition:none!important}}
+/* learn */
+.today{box-shadow:0 0 0 2px var(--accent)}
+.eyebrow{font-size:13px;font-weight:600;color:var(--accent-ink);margin:0 0 6px}
+.tt{font-size:24px;font-weight:600;letter-spacing:-.01em;line-height:1.2;margin-bottom:6px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.pill{font-style:normal;font-size:13px;font-weight:700;padding:2px 10px;border-radius:999px;background:var(--c);color:var(--t);line-height:1.5}
+.prog{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;margin:20px 0 12px}
+.prog-bar{height:8px;border-radius:999px;background:var(--surf2);overflow:hidden}
+.prog-bar i{display:block;height:100%;width:0;background:var(--accent);border-radius:999px;transition:width .3s}
+.prog span{font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+.wk{background:var(--surf);border-radius:20px;box-shadow:var(--shadow);margin-bottom:10px}
+.wk summary{list-style:none;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 16px;cursor:pointer;min-height:56px}
+.wk summary::-webkit-details-marker{display:none}
+.wk summary:focus-visible,.go:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:20px}
+.wn{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--surf2);font-weight:700;font-size:14px}
+.wk.done .wn{background:var(--accent);color:#fff}
+.wk summary b{margin-right:6px}
+.cnt{color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
+.steps{list-style:none;margin:0;padding:0 12px 8px}
+.step{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 4px;border-top:1px solid var(--line)}
+.step input{width:22px;height:22px;accent-color:var(--accent);margin:0}
+.step label{cursor:pointer;display:grid;gap:2px}
+.step label b{font-weight:600;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.step label span{font-size:14px;color:var(--muted)}
+.step.done label b{color:var(--muted)}
+.go{min-height:40px;padding:0 16px;border-radius:999px;border:1.5px solid var(--line);background:var(--surf);font:600 15px Inter,system-ui,sans-serif;color:inherit;cursor:pointer}
+.toast{position:fixed;left:50%;bottom:calc(80px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);opacity:0;background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:600;font-size:15px;pointer-events:none;transition:opacity .2s,transform .2s;max-width:calc(100% - 32px);z-index:5}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+/* wait for me */
+.wait{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;margin-top:14px;padding:12px 14px;border-radius:16px;background:var(--accent-soft)}
+.wait[hidden]{display:none}
+#pNow.waiting{animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 6px var(--accent)}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}#needle{transition:none!important}#pNow.waiting{animation:none;box-shadow:0 0 0 4px var(--accent)}}
 </style>
 </head>
 <body>
@@ -135,6 +167,14 @@ audio{width:100%;margin-top:10px}
   <div class="stripe" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
 </header>
 <main id="main">
+
+<section data-tab="learn" aria-labelledby="t-learn">
+  <h2 id="t-learn">Your eight weeks</h2>
+  <p class="lead">About fifteen minutes a day. Tap Go to jump straight to a step. Most steps tick themselves off when the app hears you do them; tick the rest yourself.</p>
+  <div class="card today" id="today" aria-live="polite"></div>
+  <div class="prog"><div class="prog-bar" role="progressbar" aria-label="Course progress" aria-valuemin="0" id="progBar"><i id="progFill"></i></div><span id="progTxt"></span></div>
+  <div id="weeks"></div>
+</section>
 
 <section data-tab="tune" aria-labelledby="t-tune">
   <h2 id="t-tune">Tune up</h2>
@@ -229,7 +269,9 @@ audio{width:100%;margin-top:10px}
         <div><div class="swatch now" id="pNow"></div><div class="beats" id="pBeats"></div></div>
         <div class="next">Next<div class="swatch" id="pNext"></div></div>
       </div>
+      <div class="wait" id="pWaitBox" hidden><span id="pWaitMsg"></span><button class="btn primary" id="pSkip" type="button">Continue</button></div>
       <div class="tempo"><span class="note">Tempo</span><input type="range" id="pBpm" min="50" max="130" step="2" aria-label="Song tempo"><output id="pBpmOut"></output></div>
+      <div class="row"><button class="chip" id="pSlow" type="button" aria-pressed="false">Slow, 70%</button><label class="sw"><input type="checkbox" id="pWait"> Wait for me at each chord change</label></div>
       <div class="row" style="justify-content:space-between"><label class="sw"><input type="checkbox" id="pSound" checked> Backing uke</label><button class="btn primary" id="pGo" type="button">Play</button></div>
       <div class="lyr" id="pLyr"></div>
     </div>
@@ -249,15 +291,15 @@ audio{width:100%;margin-top:10px}
   </div>
   <h3>Your results</h3>
   <div id="dLog"></div>
-  <h3>Eight-week milestones</h3>
-  <ul class="ms" id="ms"></ul>
-  <h3>Listen back</h3>
+  <h3 id="lbHead">Listen back</h3>
   <p class="note">Record yourself in the Voice Memos app, then load it here to listen. Recordings stay on your device.</p>
   <label class="file">Load a recording<input type="file" id="lbFile" accept="audio/*,.m4a,.mp3,.wav,.aac"></label>
   <audio id="lbAudio" controls hidden></audio>
 </section>
 </main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 <nav class="nav" aria-label="Sections">
+  <button type="button" data-go="learn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5h6a4 4 0 0 1 4 4v11a3 3 0 0 0-3-3H2z"/><path d="M22 5h-6a4 4 0 0 0-4 4v11a3 3 0 0 1 3-3h7z"/></svg>Learn</button>
   <button type="button" data-go="tune"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 17a8 8 0 0 1 16 0"/><path d="M12 17l4-6"/></svg>Tune</button>
   <button type="button" data-go="chords"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M10 3v18M14 3v18M5 9h14M5 15h14"/></svg>Chords</button>
   <button type="button" data-go="strum"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v14m-3-3 3 3 3-3M17 20V6m-3 3 3-3 3 3"/></svg>Strum</button>
@@ -307,15 +349,16 @@ async function mic(size){try{if(!navigator.mediaDevices||!navigator.mediaDevices
 async function decode(file){const ab=await file.arrayBuffer();return await ac().decodeAudioData(ab)}
 
 /* tuner */
-let live=null,target=null;
+let live=null,target=null;const tuned=new Set();
+function tunedCheck(){if(tuned.size===4)autoDone('tune')}
 $('#ticks').innerHTML=[-50,-40,-30,-20,-10,0,10,20,30,40,50].map(c=>{const a=(c*1.6-90)*Math.PI/180,r1=c%50?92:86,r2=102;return `<line x1="${150+r1*Math.cos(a)}" y1="${150+r1*Math.sin(a)}" x2="${150+r2*Math.cos(a)}" y2="${150+r2*Math.sin(a)}" stroke="var(--muted)" stroke-width="${c?1.5:3}"/>`}).join('');
 $('#strings').innerHTML=SN.map((n,i)=>`<button class="str" type="button" data-s="${i}" aria-pressed="false" style="--c:${SC[i]};--t:${ST[i]}">${n}<small>${['G4','C4','E4','A4'][i]}</small></button>`).join('');
 $('#strings').addEventListener('click',e=>{const b=e.target.closest('.str');if(!b)return;const i=+b.dataset.s;target=target===i?null:i;document.querySelectorAll('.str').forEach(x=>x.setAttribute('aria-pressed',String(+x.dataset.s===target)));pluck(mf(OPEN[i]),ac().currentTime+0.02,0.3,2.4);if(target!=null&&!live){$('#note').textContent=SN[i]+' string';$('#hz').textContent=`Should sound ${['G4','C4','E4','A4'][i]}, ${mf(OPEN[i]).toFixed(1)} Hz`;$('#say').textContent='Now play it and tap Listen'}});
 function verdict(c){const a=Math.abs(c);if(a<=5)return['good','In tune. On to the next string.'];if(a>60)return['bad',c<0?'Far too low: tighten more':'Far too high: loosen more'];return[a<=15?'warn':'bad',c<0?'Too low: tighten the peg a little':'Too high: loosen the peg a little']}
-function showTune(x,f){const c=Math.max(-50,Math.min(50,x.cents));$('#needle').setAttribute('transform',`rotate(${c*1.6} 150 150)`);const v=verdict(x.cents);$('#tuneCard').dataset.st=v[0];$('#note').textContent=SN[x.s]+' string';$('#hz').textContent=`Heard ${x.name}, ${f.toFixed(1)} Hz, ${x.cents>0?'+':''}${Math.round(x.cents)} cents`;$('#say').textContent=v[1];document.querySelectorAll('.str').forEach(b=>b.classList.toggle('hit',+b.dataset.s===x.s))}
+function showTune(x,f){const c=Math.max(-50,Math.min(50,x.cents));$('#needle').setAttribute('transform',`rotate(${c*1.6} 150 150)`);const v=verdict(x.cents);$('#tuneCard').dataset.st=v[0];$('#note').textContent=SN[x.s]+' string';$('#hz').textContent=`Heard ${x.name}, ${f.toFixed(1)} Hz, ${x.cents>0?'+':''}${Math.round(x.cents)} cents`;$('#say').textContent=v[1];document.querySelectorAll('.str').forEach(b=>b.classList.toggle('hit',+b.dataset.s===x.s));if(v[0]==='good'){tuned.add(x.s);tunedCheck()}}
 function stopLive(){if(!live)return;cancelAnimationFrame(live.raf);live.st.getTracks().forEach(t=>t.stop());live=null;$('#listen').textContent='Listen with mic'}
 $('#listen').addEventListener('click',async()=>{if(live){stopLive();return}const m=await mic(4096);if(!m){$('#tuneBlocked').hidden=false;return}live=m;$('#listen').textContent='Stop listening';const buf=new Float32Array(4096),hist=[];const loop=()=>{if(!live)return;m.an.getFloatTimeDomainData(buf);const f=detect(buf,ctx.sampleRate);if(f>0){hist.push(f);if(hist.length>5)hist.shift();const s=[...hist].sort((p,q)=>p-q)[hist.length>>1];showTune(info(s,target),s)}live.raf=requestAnimationFrame(loop)};loop()});
-$('#tuneFile').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;const out=$('#tuneRes');out.innerHTML='<li>Listening to your recording…</li>';try{const au=await decode(file);const sr=au.sampleRate,d=au.getChannelData(0),N=2048,end=Math.min(d.length-N,sr*15);const segs=[];let cur=null;for(let i=0;i<end;i+=1024){const f=detect(d.subarray(i,i+N),sr);const x=f>0?info(f,null):null;if(x&&Math.abs(x.cents)<150){if(cur&&cur.s===x.s)cur.c.push(x.cents);else{cur={s:x.s,c:[x.cents]};segs.push(cur)}}else cur=null}const res=segs.filter(s=>s.c.length>=4).map(s=>({s:s.s,c:[...s.c].sort((p,q)=>p-q)[s.c.length>>1]}));out.innerHTML=res.length?res.map(r=>{const v=verdict(r.c);return `<li><span class="dot" style="--c:${SC[r.s]};--t:${ST[r.s]}">${SN[r.s]}</span><span><b>${r.c>0?'+':''}${Math.round(r.c)} cents</b><br><span class="note" style="color:var(--${v[0]})">${v[1]}</span></span></li>`}).join(''):'<li>No clear note found. Pluck one string at a time and let each ring for two seconds.</li>';if(res.length){const l=res[res.length-1];showTune({s:l.s,cents:l.c,name:SN[l.s]},mf(OPEN[l.s]+l.c/100))}}catch(err){out.innerHTML='<li>That file could not be read. Try a different recording format, such as m4a or mp3.</li>'}e.target.value=''});
+$('#tuneFile').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;const out=$('#tuneRes');out.innerHTML='<li>Listening to your recording…</li>';try{const au=await decode(file);const sr=au.sampleRate,d=au.getChannelData(0),N=2048,end=Math.min(d.length-N,sr*15);const segs=[];let cur=null;for(let i=0;i<end;i+=1024){const f=detect(d.subarray(i,i+N),sr);const x=f>0?info(f,null):null;if(x&&Math.abs(x.cents)<150){if(cur&&cur.s===x.s)cur.c.push(x.cents);else{cur={s:x.s,c:[x.cents]};segs.push(cur)}}else cur=null}const res=segs.filter(s=>s.c.length>=4).map(s=>({s:s.s,c:[...s.c].sort((p,q)=>p-q)[s.c.length>>1]}));out.innerHTML=res.length?res.map(r=>{const v=verdict(r.c);return `<li><span class="dot" style="--c:${SC[r.s]};--t:${ST[r.s]}">${SN[r.s]}</span><span><b>${r.c>0?'+':''}${Math.round(r.c)} cents</b><br><span class="note" style="color:var(--${v[0]})">${v[1]}</span></span></li>`}).join(''):'<li>No clear note found. Pluck one string at a time and let each ring for two seconds.</li>';res.forEach(r=>{if(Math.abs(r.c)<=5)tuned.add(r.s)});tunedCheck();if(res.length){const l=res[res.length-1];showTune({s:l.s,cents:l.c,name:SN[l.s]},mf(OPEN[l.s]+l.c/100))}}catch(err){out.innerHTML='<li>That file could not be read. Try a different recording format, such as m4a or mp3.</li>'}e.target.value=''});
 
 /* chord diagrams */
 function dia(n,w){const c=CH[n],f=c.f,sx=w/5,y0=26,fh=sx*1.15,h=y0+fh*5+22;let s=`<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="${n} chord: ${c.h}">`;for(let i=0;i<4;i++){const x=sx*(i+1);s+=`<line x1="${x}" y1="${y0}" x2="${x}" y2="${y0+fh*5}" stroke="currentColor" stroke-opacity=".55" stroke-width="1.5"/><text x="${x}" y="${h-4}" text-anchor="middle" font-size="12" fill="currentColor" font-family="Inter">${SN[i]}</text>`}for(let k=1;k<=5;k++){const y=y0+fh*k;s+=`<line x1="${sx}" y1="${y}" x2="${sx*4}" y2="${y}" stroke="currentColor" stroke-opacity=".35"/>`}s+=`<line x1="${sx-1}" y1="${y0}" x2="${sx*4+1}" y2="${y0}" stroke="currentColor" stroke-width="5"/>`;if(c.barre)s+=`<rect x="${sx*0.62}" y="${y0+fh*0.5-sx*0.28}" width="${sx*3.76}" height="${sx*0.56}" rx="${sx*0.28}" fill="currentColor"/>`;f.forEach((v,i)=>{const x=sx*(i+1);s+=v===0?`<circle cx="${x}" cy="${y0-11}" r="${sx*0.17}" fill="none" stroke="currentColor" stroke-width="1.5"/>`:`<circle cx="${x}" cy="${y0+fh*(v-0.5)}" r="${sx*0.3}" fill="currentColor"/>`});return s+'</svg>'}
@@ -327,16 +370,16 @@ $('#chordGrid').innerHTML=ORDER.map(n=>`<button class="chip cc" type="button" da
 function setCh(n){curCh=n;document.querySelectorAll('#chordGrid .chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.ch===n)));swatch($('#chSwatch'),n,120);$('#chHint').textContent=CH[n].h;$('#chNotes').textContent='Notes: '+pcs(n).map(p=>NAMES[p]).join(', ');$('#chOut').innerHTML=''}
 $('#chordGrid').addEventListener('click',e=>{const b=e.target.closest('[data-ch]');if(b){setCh(b.dataset.ch);strum(b.dataset.ch,ac().currentTime+0.03,false,0.22)}});
 $('#chPlay').addEventListener('click',()=>{const t=ac().currentTime+0.03;strum(curCh,t,false,0.22);strum(curCh,t+0.6,false,0.22)});
-function judge(pc){const ex=pcs(curCh);const inS=ex.reduce((a,p)=>a+pc[p],0);const miss=ex.filter(p=>pc[p]<0.05);const score=n=>pcs(n).reduce((a,p)=>a+pc[p],0)/Math.sqrt(pcs(n).length);const near=ORDER.slice().sort((x,y)=>score(y)-score(x))[0];let msg,st;if(inS>=0.72&&!miss.length){st='good';msg=`Sounds like a clean ${curCh}. Nice.`}else if(inS>=0.5){st='warn';const strs=CH[curCh].f.map((v,i)=>miss.includes((OPEN[i]+v)%12)?SN[i]:null).filter(Boolean);msg=`Close. ${strs.length?'Listen to the '+strs.join(' and ')+' string: it may be muted or buzzing.':'One string may be off; pluck each one to check.'}`}else{st='bad';msg=`Not quite yet. It sounds closer to ${near}. Check your fingers against the diagram and your tuning.`}
+function judge(pc){const ex=pcs(curCh);const inS=ex.reduce((a,p)=>a+pc[p],0);const miss=ex.filter(p=>pc[p]<0.05);const score=n=>pcs(n).reduce((a,p)=>a+pc[p],0)/Math.sqrt(pcs(n).length);const near=ORDER.slice().sort((x,y)=>score(y)-score(x))[0];let msg,st;if(inS>=0.72&&!miss.length){st='good';msg=`Sounds like a clean ${curCh}. Nice.`;autoDone('chord',curCh)}else if(inS>=0.5){st='warn';const strs=CH[curCh].f.map((v,i)=>miss.includes((OPEN[i]+v)%12)?SN[i]:null).filter(Boolean);msg=`Close. ${strs.length?'Listen to the '+strs.join(' and ')+' string: it may be muted or buzzing.':'One string may be off; pluck each one to check.'}`}else{st='bad';msg=`Not quite yet. It sounds closer to ${near}. Check your fingers against the diagram and your tuning.`}
  $('#chOut').innerHTML=`<p style="margin-top:14px;font-weight:600;color:var(--${st})">${msg}</p><div class="bars" style="${cv(curCh)}">${pc.map((v,i)=>`<div class="${ex.includes(i)?'ex':''}"><i style="height:${Math.max(3,Math.min(100,v*220))}%"></i>${NAMES[i]}</div>`).join('')}</div><p class="note" style="margin-top:6px">Coloured bars are the notes ${curCh} needs. An estimate from your microphone, so tune first.</p>`}
 $('#chCheck').addEventListener('click',async()=>{const m=await mic(8192);if(!m){$('#chBlocked').hidden=false;return}const out=$('#chOut');let n=3;out.innerHTML=`<p style="margin-top:14px;font-size:22px;font-weight:700">Strum in ${n}</p>`;const iv=setInterval(()=>{n--;if(n>0){out.firstChild.textContent=`Strum in ${n}`;return}clearInterval(iv);out.firstChild.textContent='Strum now!';setTimeout(()=>{const b=new Float32Array(8192);m.an.getFloatTimeDomainData(b);m.st.getTracks().forEach(t=>t.stop());judge(chroma(b,ctx.sampleRate))},450)},700)});
 $('#chFile').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;$('#chOut').innerHTML='<p style="margin-top:14px">Listening to your recording…</p>';try{const au=await decode(file);const d=au.getChannelData(0),sr=au.sampleRate;let pk=0,pv=0;for(let i=0;i+2048<d.length;i+=1024){let e2=0;for(let j=i;j<i+2048;j++)e2+=d[j]*d[j];if(e2>pv){pv=e2;pk=i}}const st=Math.min(pk+Math.floor(sr*0.08),Math.max(0,d.length-8192));judge(chroma(d.slice(st,st+8192),sr))}catch(err){$('#chOut').innerHTML='<p style="margin-top:14px">That file could not be read. Try an m4a or mp3 recording.</p>'}e.target.value=''});
 
 /* engine */
 const E={on:false};
-function engStop(){if(E.timer)clearInterval(E.timer);E.timer=null;E.on=false}
-function engStart(o){engStop();const a=ac();E.on=true;E.o=o;E.slot=0;E.bar=o.countIn?-1:0;E.t=a.currentTime+0.15;E.timer=setInterval(tick,25);tick()}
-function tick(){const a=ctx,o=E.o;while(E.on&&E.t<a.currentTime+0.12){const pat=o.pattern(),dur=60/o.bpm()/2,s=E.slot,b=E.bar,t=E.t;const ch=b<0?null:o.chord(b);if(s%2===0&&(o.click()||b<0))click(t,s===0);const k=pat[s];if(ch&&o.sound()&&(k==='D'||k==='U'))strum(ch,t,k==='U');setTimeout(()=>{if(E.on)o.ui(s,b,ch)},Math.max(0,(t-a.currentTime)*1000));E.t+=dur;E.slot++;if(E.slot>=pat.length){E.slot=0;E.bar++;if(o.bars&&E.bar>=o.bars){const left=Math.max(0,(E.t-a.currentTime)*1000);engStop();setTimeout(()=>o.done&&o.done(),left);break}}}}
+function engStop(){if(E.timer)clearInterval(E.timer);E.timer=null;E.on=false;E.wait=false}
+function engStart(o){engStop();const a=ac();E.on=true;E.wait=false;E.cleared=null;E.o=o;E.slot=0;E.bar=o.countIn?-1:0;E.t=a.currentTime+0.15;E.timer=setInterval(tick,25);tick()}
+function tick(){const a=ctx,o=E.o;while(E.on&&!E.wait&&E.t<a.currentTime+0.12){const pat=o.pattern(),dur=60/o.bpm()/2,s=E.slot,b=E.bar,t=E.t;if(s===0&&b>=0&&o.waitAt&&E.cleared!==b&&o.waitAt(b)){E.wait=true;setTimeout(()=>{if(E.on)o.onWait(b,()=>{if(!E.on)return;E.cleared=b;E.t=a.currentTime+0.25;E.wait=false;tick()})},Math.max(0,(t-a.currentTime)*1000));break}const ch=b<0?null:o.chord(b);if(s%2===0&&(o.click()||b<0))click(t,s===0);const k=pat[s];if(ch&&o.sound()&&(k==='D'||k==='U'))strum(ch,t,k==='U');setTimeout(()=>{if(E.on)o.ui(s,b,ch)},Math.max(0,(t-a.currentTime)*1000));E.t+=dur;E.slot++;if(E.slot>=pat.length){E.slot=0;E.bar++;if(o.bars&&E.bar>=o.bars){const left=Math.max(0,(E.t-a.currentTime)*1000);engStop();setTimeout(()=>o.done&&o.done(),left);break}}}}
 const arrow=(up,on)=>`<svg viewBox="0 0 26 42" aria-hidden="true"><path d="${up?'M13 38V6M5 14l8-8 8 8':'M13 4v32M5 28l8 8 8-8'}" fill="none" stroke="currentColor" stroke-width="${on?3.5:2}" stroke-linecap="round" stroke-linejoin="round" ${on?'':'stroke-dasharray="3 5" opacity=".45"'}/></svg>`;
 
 /* strum tab */
@@ -344,15 +387,17 @@ const PAT=[{n:'Four downs',p:'D.D.D.D.'},{n:'Down-up',p:'DUDUDUDU'},{n:'Folk str
 let pi=3,sCh='C';
 function drawSlots(){const p=PAT[pi].p;const lab=['1','&','2','&','3','&','4','&'];$('#slots').style.gridTemplateColumns=`repeat(${p.length},minmax(0,1fr))`;$('#slots').innerHTML=[...p].map((k,i)=>`<div class="slot ${i%2?'and':''}" data-i="${i}"><b>${lab[i]}</b>${arrow(i%2===1,k!=='.')}</div>`).join('')}
 $('#patRow').innerHTML=PAT.map((x,i)=>`<button class="chip" type="button" data-p="${i}" aria-pressed="${i===pi}">${x.n}</button>`).join('');
-$('#patRow').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(!b)return;pi=+b.dataset.p;document.querySelectorAll('#patRow .chip').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));drawSlots();if(E.on&&E.o.tag==='strum')E.slot=0});
+function pickPat(i){pi=i;document.querySelectorAll('#patRow .chip').forEach(x=>x.setAttribute('aria-pressed',String(+x.dataset.p===i)));drawSlots();if(E.on&&E.o.tag==='strum')E.slot=0}
+$('#patRow').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(b)pickPat(+b.dataset.p)});
 $('#sChords').innerHTML=ORDER.slice(0,6).map(n=>`<button class="chip cc" type="button" data-ch="${n}" style="${cv(n)}" aria-pressed="${n===sCh}">${n}</button>`).join('');
-$('#sChords').addEventListener('click',e=>{const b=e.target.closest('[data-ch]');if(!b)return;sCh=b.dataset.ch;document.querySelectorAll('#sChords .chip').forEach(x=>x.setAttribute('aria-pressed',String(x===b)))});
+function pickSCh(n){sCh=n;document.querySelectorAll('#sChords .chip').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.ch===n)))}
+$('#sChords').addEventListener('click',e=>{const b=e.target.closest('[data-ch]');if(b)pickSCh(b.dataset.ch)});
 const setBpm=v=>{$('#bpm').value=v;$('#bpmOut').textContent=$('#bpm').value+' BPM'};
 $('#bpm').addEventListener('input',()=>setBpm($('#bpm').value));
 $('#bpmDown').addEventListener('click',()=>setBpm(+$('#bpm').value-5));
 $('#bpmUp').addEventListener('click',()=>setBpm(+$('#bpm').value+5));
-function stopAll(){engStop();$('#sGo').textContent='Start';$('#pGo').textContent='Play';document.querySelectorAll('.slot.now').forEach(x=>x.classList.remove('now'))}
-$('#sGo').addEventListener('click',()=>{if(E.on&&E.o.tag==='strum'){stopAll();return}stopAll();$('#sGo').textContent='Stop';engStart({tag:'strum',bpm:()=>+$('#bpm').value,pattern:()=>PAT[pi].p,chord:()=>sCh,sound:()=>$('#sSound').checked,click:()=>$('#sClick').checked,ui:s=>{document.querySelectorAll('.slot').forEach(x=>x.classList.toggle('now',+x.dataset.i===s))}})});
+function stopAll(){engStop();waitEnd();micEnd();$('#sGo').textContent='Start';$('#pGo').textContent='Play';document.querySelectorAll('.slot.now').forEach(x=>x.classList.remove('now'))}
+$('#sGo').addEventListener('click',()=>{if(E.on&&E.o.tag==='strum'){stopAll();return}stopAll();$('#sGo').textContent='Stop';const o={tag:'strum',t0:ac().currentTime,bpm:()=>+$('#bpm').value,pattern:()=>PAT[pi].p,chord:()=>sCh,sound:()=>$('#sSound').checked,click:()=>$('#sClick').checked,ui:s=>{document.querySelectorAll('.slot').forEach(x=>x.classList.toggle('now',+x.dataset.i===s));if(!o.ok&&ctx.currentTime-o.t0>=60){o.ok=1;autoDone('strum',pi,{bpm:+$('#bpm').value})}}};engStart(o)});
 
 /* songs */
 const SONGS=[
@@ -372,30 +417,108 @@ $('#songs').innerHTML=SONGS.map((s,i)=>{const cs=[...new Set(s.b.map(x=>x[0]))];
 let song=null,lastBar=-2;
 function stage(b){const cur=b<0?song.b[0][0]:song.b[b][0],nx=song.b[Math.min(song.b.length-1,b+1)][0];swatch($('#pNow'),cur,96);swatch($('#pNext'),nx,56);document.querySelectorAll('.bar').forEach(x=>x.classList.toggle('cur',+x.dataset.b===b));const el=document.querySelector(`.bar[data-b="${b}"]`);if(el)el.scrollIntoView({block:'nearest',behavior:'smooth'})}
 function beats(n,on){$('#pBeats').innerHTML=Array.from({length:n},(_,i)=>`<i class="${i===on?'on':''}"></i>`).join('')}
-$('#songs').addEventListener('click',e=>{const b=e.target.closest('[data-s]');if(!b)return;stopAll();song=SONGS[+b.dataset.s];$('#songList').hidden=true;$('#player').hidden=false;$('#pTitle').textContent=song.n;$('#pBpm').value=song.bpm;$('#pBpmOut').textContent=song.bpm+' BPM';$('#pLyr').innerHTML=song.b.map((x,i)=>`<div class="bar" data-b="${i}" style="${cv(x[0])}"><em>${x[0]}</em><br>${x[1]||'&nbsp;'}</div>`).join('');stage(-1);beats(song.m,-1);$('#main').scrollTop=0});
+const slowBpm=()=>Math.max(50,Math.round(song.bpm*0.7/2)*2);
+function setBpmP(v){$('#pBpm').value=v;$('#pBpmOut').textContent=$('#pBpm').value+' BPM';$('#pSlow').setAttribute('aria-pressed',String(+$('#pBpm').value<song.bpm))}
+$('#pSlow').addEventListener('click',()=>setBpmP(+$('#pBpm').value<song.bpm?song.bpm:slowBpm()));
+$('#pWait').checked=store.get('uke-wait',false);$('#pWait').addEventListener('change',()=>store.set('uke-wait',$('#pWait').checked));
+$('#songs').addEventListener('click',e=>{const b=e.target.closest('[data-s]');if(b)openSong(+b.dataset.s)});
+function openSong(i,st){stopAll();song=SONGS[i];$('#songList').hidden=true;$('#player').hidden=false;$('#pTitle').textContent=song.n;$('#pGo').textContent='Play';setBpmP(st&&st.slow?slowBpm():song.bpm);if(st){$('#pWait').checked=!!st.wait&&!st.free}$('#pLyr').innerHTML=song.b.map((x,i)=>`<div class="bar" data-b="${i}" style="${cv(x[0])}"><em>${x[0]}</em><br>${x[1]||'&nbsp;'}</div>`).join('');stage(-1);beats(song.m,-1);$('#main').scrollTop=0}
 $('#pBack').addEventListener('click',()=>{stopAll();$('#player').hidden=true;$('#songList').hidden=false});
-$('#pBpm').addEventListener('input',()=>$('#pBpmOut').textContent=$('#pBpm').value+' BPM');
-$('#pGo').addEventListener('click',()=>{if(E.on&&E.o.tag==='song'){stopAll();return}stopAll();$('#pGo').textContent='Stop';lastBar=-2;engStart({tag:'song',countIn:true,bars:song.b.length,bpm:()=>+$('#pBpm').value,pattern:()=>song.m===3?'D.D.D.':'D.DUD.DU',chord:b=>song.b[b][0],sound:()=>$('#pSound').checked,click:()=>true,ui:(s,b)=>{if(b!==lastBar){lastBar=b;stage(b)}beats(song.m,s>>1)},done:()=>{$('#pGo').textContent='Play again';beats(song.m,-1)}})});
+$('#pBpm').addEventListener('input',()=>setBpmP($('#pBpm').value));
+const WT={mic:null,iv:null,go:null,used:false};
+function hears(ch,b,sr){let e=0;for(let i=0;i<b.length;i++)e+=b[i]*b[i];if(Math.sqrt(e/b.length)<0.01)return false;const pc=chroma(b,sr),ex=pcs(ch);return ex.reduce((x,p)=>x+pc[p],0)>=0.6&&ex.every(p=>pc[p]>=0.04)}
+function waitEnd(){if(WT.iv)clearInterval(WT.iv);WT.iv=null;WT.go=null;$('#pWaitBox').hidden=true;$('#pNow').classList.remove('waiting')}
+function micEnd(){if(WT.mic){WT.mic.st.getTracks().forEach(t=>t.stop());WT.mic=null}}
+function release(){const g=WT.go;waitEnd();if(g)g()}
+function waitFor(ch,go){WT.used=true;WT.go=go;$('#pNow').classList.add('waiting');$('#pWaitBox').hidden=false;if(WT.mic){$('#pWaitMsg').innerHTML=`Play <b>${ch}</b> to carry on. Listening…`;$('#pSkip').textContent='Skip';let hits=0;const buf=new Float32Array(WT.mic.an.fftSize);WT.iv=setInterval(()=>{if(!WT.mic)return;WT.mic.an.getFloatTimeDomainData(buf);if(hears(ch,buf,ctx.sampleRate)){if(++hits>=2)release()}else hits=0},120)}else{$('#pWaitMsg').innerHTML=`Fingers on <b>${ch}</b>? Tap Continue when you're ready.`;$('#pSkip').textContent='Continue'}}
+$('#pSkip').addEventListener('click',release);
+$('#pGo').addEventListener('click',async()=>{if(E.on&&E.o.tag==='song'){stopAll();return}stopAll();ac();WT.used=false;if($('#pWait').checked){$('#pGo').disabled=true;WT.mic=await mic(8192);$('#pGo').disabled=false}$('#pGo').textContent='Stop';lastBar=-2;engStart({tag:'song',countIn:true,bars:song.b.length,bpm:()=>+$('#pBpm').value,pattern:()=>song.m===3?'D.D.D.':'D.DUD.DU',chord:b=>song.b[b][0],sound:()=>$('#pSound').checked,click:()=>true,waitAt:b=>$('#pWait').checked&&b>0&&song.b[b][0]!==song.b[b-1][0],onWait:(b,go)=>{lastBar=b;stage(b);beats(song.m,-1);waitFor(song.b[b][0],go)},ui:(s,b)=>{if(b!==lastBar){lastBar=b;stage(b)}beats(song.m,s>>1)},done:()=>{$('#pGo').textContent='Play again';beats(song.m,-1);micEnd();autoDone('song',song.n,{free:!WT.used})}})});
 
 /* practice */
 const opts=ORDER.map(n=>`<option>${n}</option>`).join('');$('#dA').innerHTML=opts;$('#dB').innerHTML=opts;$('#dA').value='C';$('#dB').value='Am';
 $('#dHear').addEventListener('click',()=>{const t=ac().currentTime+0.03;strum($('#dA').value,t,false,0.22);strum($('#dB').value,t+0.9,false,0.22)});
 let dn=0,dRun=null;
 function drawLog(){const L=store.get('uke-drill',[]);if(!L.length){$('#dLog').innerHTML='<p class="note">No minutes logged yet. Your first one will show up here, with your best score for each pair.</p>';return}const best={};L.forEach(r=>{const k=r.a+' to '+r.b;best[k]=Math.max(best[k]||0,r.n)});$('#dLog').innerHTML=`<div class="scroll"><table><thead><tr><th>Date</th><th>Pair</th><th style="text-align:right">Changes</th><th style="text-align:right">Best</th></tr></thead><tbody>${L.slice(-8).reverse().map(r=>`<tr><td>${r.d}</td><td>${r.a} to ${r.b}</td><td class="n">${r.n}</td><td class="n">${best[r.a+' to '+r.b]}</td></tr>`).join('')}</tbody></table></div>`}
-$('#dGo').addEventListener('click',()=>{if(dRun){clearInterval(dRun);dRun=null;$('#tap').disabled=true;$('#dGo').textContent='Start the minute';return}dn=0;$('#dCount').textContent='0';$('#tap').disabled=false;$('#dGo').textContent='Stop';const t0=Date.now();dRun=setInterval(()=>{const left=Math.max(0,60-(Date.now()-t0)/1000);$('#ringT').textContent=Math.ceil(left);$('#ringArc').setAttribute('stroke-dashoffset',String(326.7*(1-left/60)));if(left<=0){clearInterval(dRun);dRun=null;$('#tap').disabled=true;$('#dGo').textContent='Start the minute';click(ac().currentTime+0.02,true);const L=store.get('uke-drill',[]);L.push({d:new Date().toISOString().slice(0,10),a:$('#dA').value,b:$('#dB').value,n:dn});store.set('uke-drill',L.slice(-60));drawLog()}},100)});
+$('#dGo').addEventListener('click',()=>{if(dRun){clearInterval(dRun);dRun=null;$('#tap').disabled=true;$('#dGo').textContent='Start the minute';return}dn=0;$('#dCount').textContent='0';$('#tap').disabled=false;$('#dGo').textContent='Stop';const t0=Date.now();dRun=setInterval(()=>{const left=Math.max(0,60-(Date.now()-t0)/1000);$('#ringT').textContent=Math.ceil(left);$('#ringArc').setAttribute('stroke-dashoffset',String(326.7*(1-left/60)));if(left<=0){clearInterval(dRun);dRun=null;$('#tap').disabled=true;$('#dGo').textContent='Start the minute';click(ac().currentTime+0.02,true);const L=store.get('uke-drill',[]);L.push({d:new Date().toISOString().slice(0,10),a:$('#dA').value,b:$('#dB').value,n:dn});store.set('uke-drill',L.slice(-60));drawLog();autoDone('drill',[$('#dA').value,$('#dB').value],{n:dn})}},100)});
 $('#tap').addEventListener('click',()=>{dn++;$('#dCount').textContent=dn});
-const MS=['Week 1: tune by myself, clean C and Am','Week 2: 30 C to Am changes in a minute, Row, Row, Row Your Boat','Week 3: F and G7, When the Saints','Week 4: G, the four-chord loop without stopping','Week 5: island strum at 70 BPM','Week 6: four songs from start to finish','Week 7: two melodies from tab','Week 8: Dm, D and Em, and a recording of myself'];
-const done=store.get('uke-ms',[]);
-$('#ms').innerHTML=MS.map((m,i)=>`<li><label><input type="checkbox" data-m="${i}" ${done.includes(i)?'checked':''}><span>${m}</span></label></li>`).join('');
-$('#ms').addEventListener('change',()=>store.set('uke-ms',[...document.querySelectorAll('#ms input:checked')].map(x=>+x.dataset.m)));
-$('#lbFile').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const a=$('#lbAudio');a.src=URL.createObjectURL(f);a.hidden=false});
+$('#lbFile').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const a=$('#lbAudio');a.src=URL.createObjectURL(f);a.hidden=false;autoDone('record')});
+
+/* learn path */
+const PATH=[
+ {w:'First sounds',s:[
+  {id:'hold',t:'read',l:'Hold your uke',d:"Sit tall with the body against your chest and the neck pointing up and to the left. Your strumming forearm keeps it in place; strum with your index fingernail where the neck meets the body. Fretting thumb rests behind the neck. Sore fingertips in week one are normal: short, daily sessions beat long ones."},
+  {id:'tune1',t:'tune'},
+  {id:'c',t:'chord',k:'C'},
+  {id:'am',t:'chord',k:'Am'},
+  {id:'s1',t:'strum',k:0,ch:'C',bpm:60}]},
+ {w:'Your first change',s:[
+  {id:'d1',t:'drill',k:['C','Am'],goal:20},
+  {id:'g7',t:'chord',k:'G7'},
+  {id:'d2',t:'drill',k:['C','G7'],goal:15},
+  {id:'row',t:'song',k:'Row, Row, Row Your Boat',slow:1,wait:1}]},
+ {w:'Three-chord songs',s:[
+  {id:'d3',t:'drill',k:['C','Am'],goal:30},
+  {id:'skip',t:'song',k:'Skip to My Lou',slow:1,wait:1},
+  {id:'f',t:'chord',k:'F'},
+  {id:'c7',t:'chord',k:'C7'},
+  {id:'hb',t:'song',k:'Happy Birthday',slow:1,wait:1}]},
+ {w:'The four-chord loop',s:[
+  {id:'g',t:'chord',k:'G'},
+  {id:'d4',t:'drill',k:['Am','F'],goal:25},
+  {id:'s2',t:'strum',k:1,ch:'C',bpm:70},
+  {id:'loop',t:'song',k:'Four-chord loop',wait:1},
+  {id:'saints',t:'song',k:'When the Saints Go Marching In',wait:1}]},
+ {w:'Strumming patterns',s:[
+  {id:'s3',t:'strum',k:2,ch:'C',bpm:70},
+  {id:'s4',t:'strum',k:3,ch:'C',bpm:70},
+  {id:'s5',t:'strum',k:4,ch:'F',bpm:80},
+  {id:'grace',t:'song',k:'Amazing Grace'},
+  {id:'sus',t:'song',k:'Oh! Susanna'}]},
+ {w:'Songs start to finish',s:[
+  {id:'valley',t:'song',k:'Down in the Valley'},
+  {id:'clem',t:'song',k:'Oh My Darling, Clementine'},
+  {id:'loop2',t:'song',k:'Four-chord loop',free:1,l:'Four-chord loop without stopping',d:'Wait for me off, full speed. Ticks off when you reach the end.'},
+  {id:'rec1',t:'record',l:'Record yourself playing one song',d:'Use Voice Memos, then load it under Listen back. Notice where you slow down.'}]},
+ {w:'Holiday songs',s:[
+  {id:'d7',t:'chord',k:'D7'},
+  {id:'e7',t:'chord',k:'E7'},
+  {id:'jingle',t:'song',k:'Jingle Bells',wait:1},
+  {id:'wish',t:'song',k:'We Wish You a Merry Christmas',wait:1}]},
+ {w:'New chords',s:[
+  {id:'dm',t:'chord',k:'Dm'},
+  {id:'em',t:'chord',k:'Em'},
+  {id:'dmaj',t:'chord',k:'D'},
+  {id:'d5',t:'drill',k:['Dm','G7'],goal:20},
+  {id:'rec2',t:'record',l:'Record the same song again',d:'Play it next to your week 6 recording and hear how far you have come.'}]}
+];
+const ALL=PATH.flatMap((w,wi)=>w.s.map(st=>(st.wk=wi,st)));
+const byId=id=>ALL.find(x=>x.id===id);
+function label(st){if(st.l)return st.l;switch(st.t){case 'tune':return 'Tune all four strings';case 'chord':return 'Learn '+st.k;case 'song':return 'Play '+st.k;case 'drill':return `${st.k[0]} to ${st.k[1]}: ${st.goal} changes in a minute`;case 'strum':return `${PAT[st.k].n} on ${st.ch} at ${st.bpm} BPM`}return ''}
+function desc(st){if(st.d)return st.d;switch(st.t){case 'tune':return 'Ticks off once all four strings read in tune.';case 'chord':return CH[st.k].h+'. Ticks off when Check my chord hears it clean.';case 'song':{const s=SONGS.find(x=>x.n===st.k);return 'Chords: '+[...new Set(s.b.map(x=>x[0]))].join(', ')+(st.slow||st.wait?'. Starts '+[st.slow?'slow':'',st.wait?'and waits for you at each change':''].filter(Boolean).join(' ')+'.':'.')}case 'drill':return 'Count only the clean ones. Ticks off when you reach the goal.';case 'strum':return 'Keep going for one minute without stopping.'}return ''}
+const pill=st=>st.t==='chord'?`<i class="pill" style="${cv(st.k)}">${st.k}</i>`:'';
+function migrate(){const old=store.get('uke-ms',[]);return PATH.flatMap((w,i)=>old.includes(i)?w.s.map(x=>x.id):[])}
+const pathDone=new Set(store.get('uke-path',null)||migrate());
+function saveDone(){store.set('uke-path',[...pathDone]);drawPath()}
+function setDone(id,on){if(on)pathDone.add(id);else pathDone.delete(id);saveDone()}
+let toastT=null;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2600)}
+function match(st,k,x){switch(st.t){case 'chord':return st.k===k;case 'song':return st.k===k&&(!st.free||x.free);case 'drill':return((st.k[0]===k[0]&&st.k[1]===k[1])||(st.k[0]===k[1]&&st.k[1]===k[0]))&&x.n>=st.goal;case 'strum':return st.k===k&&x.bpm>=st.bpm;default:return true}}
+function autoDone(t,k,x){x=x||{};let hit=ALL.filter(st=>st.t===t&&!pathDone.has(st.id)&&match(st,k,x));if(t==='record')hit=hit.slice(0,1);if(!hit.length)return;hit.forEach(st=>pathDone.add(st.id));saveDone();toast('✓ '+label(hit[0]))}
+function stepRow(st){const d=pathDone.has(st.id);return `<li class="step${d?' done':''}"><input type="checkbox" id="st-${st.id}" data-id="${st.id}" ${d?'checked':''}><label for="st-${st.id}"><b>${pill(st)}${label(st)}</b><span>${desc(st)}</span></label>${st.t==='read'?'<span></span>':`<button class="go" type="button" data-step="${st.id}" aria-label="Go: ${label(st)}">Go</button>`}</li>`}
+function drawPath(){const open=new Set([...document.querySelectorAll('#weeks details[open]')].map(d=>+d.dataset.w));const next=ALL.find(st=>!pathDone.has(st.id)),n=ALL.filter(st=>pathDone.has(st.id)).length;
+ $('#progFill').style.width=(n/ALL.length*100)+'%';$('#progBar').setAttribute('aria-valuemax',ALL.length);$('#progBar').setAttribute('aria-valuenow',n);$('#progTxt').textContent=`${n} of ${ALL.length} steps`;
+ $('#today').innerHTML=next?`<p class="eyebrow">Up next · Week ${next.wk+1}, ${PATH[next.wk].w}</p><div class="tt">${pill(next)}${label(next)}</div><p class="note">${desc(next)}</p><div class="row" style="margin-top:12px">${next.t==='read'?`<button class="btn primary" type="button" data-done="${next.id}">Got it</button>`:`<button class="btn primary" type="button" data-step="${next.id}">Start</button><button class="btn" type="button" data-done="${next.id}">Mark done</button>`}</div>`:`<p class="eyebrow">All eight weeks done</p><div class="tt">You can play the ukulele.</div><p class="note">Keep one song a day going, try the island strum on every song, and add a new chord each week.</p>`;
+ $('#weeks').innerHTML=PATH.map((w,wi)=>{const d=w.s.filter(st=>pathDone.has(st.id)).length,all=d===w.s.length;return `<details class="wk${all?' done':''}" data-w="${wi}" ${open.has(wi)||(next&&next.wk===wi)?'open':''}><summary><span class="wn">${all?'✓':wi+1}</span><span><b>Week ${wi+1}</b>${w.w}</span><span class="cnt">${d}/${w.s.length}</span></summary><ul class="steps">${w.s.map(stepRow).join('')}</ul></details>`}).join('')}
+function goStep(st){stopAll();switch(st.t){case 'tune':goTab('tune');break;case 'chord':setCh(st.k);goTab('chords');break;case 'drill':$('#dA').value=st.k[0];$('#dB').value=st.k[1];goTab('practice');break;case 'strum':pickPat(st.k);pickSCh(st.ch);setBpm(st.bpm);goTab('strum');break;case 'song':goTab('songs');openSong(SONGS.findIndex(x=>x.n===st.k),st);break;case 'record':goTab('practice');$('#lbHead').scrollIntoView({block:'start'});break}}
+$('section[data-tab=learn]').addEventListener('click',e=>{const g=e.target.closest('[data-step]');if(g){goStep(byId(g.dataset.step));return}const d=e.target.closest('[data-done]');if(d)setDone(d.dataset.done,true)});
+$('#weeks').addEventListener('change',e=>{const c=e.target.closest('input[data-id]');if(c)setDone(c.dataset.id,c.checked)});
 
 /* tabs */
-const TABS=['tune','chords','strum','songs','practice'];
-function show(t){if(!TABS.includes(t))t='tune';document.querySelectorAll('section[data-tab]').forEach(s=>s.classList.toggle('on',s.dataset.tab===t));document.querySelectorAll('.nav button').forEach(b=>{if(b.dataset.go===t)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});$('#main').scrollTop=0;if(t!=='tune')stopLive()}
-document.querySelector('.nav').addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(!b)return;stopAll();if(location.hash!=='#'+b.dataset.go)location.hash=b.dataset.go;else show(b.dataset.go)});
+const TABS=['learn','tune','chords','strum','songs','practice'];
+function show(t){if(!TABS.includes(t))t='learn';document.querySelectorAll('section[data-tab]').forEach(s=>s.classList.toggle('on',s.dataset.tab===t));document.querySelectorAll('.nav button').forEach(b=>{if(b.dataset.go===t)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});$('#main').scrollTop=0;if(t!=='tune')stopLive()}
+function goTab(t){if(location.hash!=='#'+t)history.pushState(null,'','#'+t);show(t)}
+document.querySelector('.nav').addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(!b)return;stopAll();goTab(b.dataset.go)});
 window.addEventListener('hashchange',()=>show(location.hash.slice(1)));
-setCh('C');drawSlots();drawLog();show(location.hash.slice(1));
+setCh('C');drawSlots();drawLog();drawPath();show(location.hash.slice(1));
 }
 </script>
 </body>

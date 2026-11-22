@@ -2,6 +2,8 @@
 
 A pocket practice ukulele in a single web page: a live tuner dial, colour-coded chord cards that check your chord through the microphone, a strumming metronome, play-along songs and a one-minute chord-change drill.
 
+The **Learn** tab ties it together as an eight-week course. It always shows the next step, jumps straight to the right chord, song or drill, and ticks steps off when the app hears you do them. Songs can play at 70% speed and can **wait for you** at each chord change until the mic hears the new chord (or you tap Continue).
+
 No build step and no dependencies. Everything lives in `index.html`.
 
 ## Run it on your computer
@@ -46,7 +48,7 @@ Pushing only updates the private repo on GitHub. Nothing goes public until you d
 GitHub Pages can host this page for free:
 
 1. On GitHub, open the repo → **Settings → General → Danger Zone → Change visibility → Public**. (Free accounts can only publish public repos.)
-2. **Settings → Pages → Build and deployment → Deploy from a branch**, pick the default branch and `/ (root)`, then **Save**.
+2. **Settings → Pages → Build and deployment → Deploy from a branch**, pick `main` and `/ (root)`, then **Save**.
 3. After a minute it is live at `https://jensonng.github.io/ukulele/`. You can link it from your portfolio site.
 
 ## Privacy
