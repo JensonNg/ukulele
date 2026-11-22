@@ -159,9 +159,10 @@ audio{width:100%;margin-top:10px}
     <div class="strings" id="strings"></div>
     <div class="row">
       <button class="btn primary" id="listen" type="button">Listen with mic</button>
-      <label class="file">Check a recording<input type="file" id="tuneFile" accept="audio/*" capture></label>
+      <label class="file">Check a recording<input type="file" id="tuneFile" accept="audio/*,.m4a,.mp3,.wav,.aac"></label>
     </div>
-    <p class="alert" id="tuneBlocked" hidden>Live listening is blocked here, so record instead: pluck G, C, E and A one at a time with your phone's voice recorder, letting each ring for two seconds, then tap Check a recording.</p>
+    <p class="note" style="margin-top:10px">Recording tip: in Voice Memos, tap the memo, then ⋯ › Save to Files. Check a recording reads m4a and mp3 files from there.</p>
+    <p class="alert" id="tuneBlocked" hidden>Live listening is blocked here, so record instead: open the Voice Memos app, pluck G, C, E and A one at a time, letting each ring for two seconds, then tap Check a recording and pick that memo.</p>
     <ul class="results" id="tuneRes"></ul>
   </div>
   <h3>Tips for your uke</h3>
@@ -182,10 +183,11 @@ audio{width:100%;margin-top:10px}
           <button class="btn" id="chPlay" type="button">Hear it</button>
           <button class="btn primary" id="chCheck" type="button">Check my chord</button>
         </div>
-        <div class="row" style="margin-top:8px"><label class="file">Check a recording<input type="file" id="chFile" accept="audio/*" capture></label></div>
+        <div class="row" style="margin-top:8px"><label class="file">Check a recording<input type="file" id="chFile" accept="audio/*,.m4a,.mp3,.wav,.aac"></label></div>
       </div>
     </div>
-    <p class="alert" id="chBlocked" hidden>Live listening is blocked here. Record one clean strum with your phone's voice recorder and tap Check a recording.</p>
+    <p class="note" style="margin-top:10px">Recording tip: in Voice Memos, tap the memo, then ⋯ › Save to Files. Check a recording reads m4a and mp3 files from there.</p>
+    <p class="alert" id="chBlocked" hidden>Live listening is blocked here. Record one clean strum in the Voice Memos app, then tap Check a recording and pick that memo.</p>
     <div id="chOut" aria-live="polite"></div>
   </div>
 </section>
@@ -250,8 +252,8 @@ audio{width:100%;margin-top:10px}
   <h3>Eight-week milestones</h3>
   <ul class="ms" id="ms"></ul>
   <h3>Listen back</h3>
-  <p class="note">Record yourself with your phone, then load it here to listen. Recordings stay on your device.</p>
-  <label class="file">Load a recording<input type="file" id="lbFile" accept="audio/*" capture></label>
+  <p class="note">Record yourself in the Voice Memos app, then load it here to listen. Recordings stay on your device.</p>
+  <label class="file">Load a recording<input type="file" id="lbFile" accept="audio/*,.m4a,.mp3,.wav,.aac"></label>
   <audio id="lbAudio" controls hidden></audio>
 </section>
 </main>
@@ -282,6 +284,7 @@ const CH={
  D:{f:[2,2,2,0],c:'#84cc16',t:D,h:'Index G2, middle C2, ring E2'},
  A:{f:[2,1,0,0],c:'#eab308',t:D,h:'Middle G2, index C1'},
  E7:{f:[1,2,0,2],c:'#6366f1',t:W,h:'Index G1, middle C2, ring A2'},
+ D7:{f:[2,0,2,0],c:'#d946ef',t:W,h:'Index on G fret 2, middle on E fret 2'},
  'B♭':{f:[3,2,1,1],c:'#a855f7',t:W,h:'Index flat across fret 1, middle C2, ring G3',barre:1}
 };
 const ORDER=Object.keys(CH);
@@ -355,6 +358,9 @@ $('#sGo').addEventListener('click',()=>{if(E.on&&E.o.tag==='strum'){stopAll();re
 const SONGS=[
  {n:'Four-chord loop',m:4,bpm:84,b:[['C',''],['G',''],['Am',''],['F',''],['C',''],['G',''],['Am',''],['F','']]},
  {n:'Row, Row, Row Your Boat',m:4,bpm:90,b:[['C','Row, row, row your boat,'],['C','gently down the stream.'],['C','Merrily, merrily,'],['C','merrily, merrily,'],['G7','life is but a'],['C','dream.']]},
+ {n:'Happy Birthday',m:3,bpm:96,b:[['C','Happy birthday to'],['G7','you, happy'],['G7','birthday to'],['C','you, happy'],['C7','birthday, dear'],['F','friend, happy'],['G7','birthday to'],['C','you!']]},
+ {n:'Jingle Bells',m:4,bpm:104,b:[['C','Jingle bells,'],['C','jingle bells,'],['C','jingle all the'],['C','way.'],['F','Oh, what fun it'],['C','is to ride in a'],['D7','one-horse open'],['G7','sleigh, hey!'],['C','Jingle bells,'],['C','jingle bells,'],['C','jingle all the'],['C','way.'],['F','Oh, what fun it'],['C','is to ride in a'],['G7','one-horse open'],['C','sleigh!']]},
+ {n:'We Wish You a Merry Christmas',m:3,bpm:108,b:[['C','We wish you a'],['C','merry'],['F','Christmas, we'],['D7','wish you a'],['D7','merry'],['G7','Christmas, we'],['E7','wish you a'],['E7','merry'],['Am','Christmas, and a'],['F','happy'],['G7','new'],['C','year!']]},
  {n:'Skip to My Lou',m:4,bpm:100,b:[['C','Lou, Lou,'],['C','skip to my Lou,'],['G7','Lou, Lou,'],['G7','skip to my Lou,'],['C','Lou, Lou,'],['C','skip to my Lou,'],['G7','skip to my Lou, my'],['C','darling.']]},
  {n:'Down in the Valley',m:3,bpm:84,b:[['C','Down in the'],['C','valley, the'],['C','valley so'],['G7','low,'],['G7','Hang your head'],['G7','over, hear the'],['G7','wind'],['C','blow.']]},
  {n:'Oh My Darling, Clementine',m:3,bpm:96,b:[['C','In a cavern,'],['C','in a canyon,'],['C','excavating'],['G7','for a mine,'],['C','Dwelt a miner,'],['C','forty-niner,'],['G7','and his daughter,'],['C','Clementine.'],['C','Oh my darling,'],['C','oh my darling,'],['C','oh my darling,'],['G7','Clementine,'],['C','You are lost and'],['C','gone forever,'],['G7','dreadful sorry,'],['C','Clementine.']]},
