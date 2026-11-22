@@ -4,7 +4,14 @@ A pocket practice ukulele in a single web page: a live tuner dial, colour-coded 
 
 The **Learn** tab ties it together as an eight-week course. It always shows the next step, jumps straight to the right chord, song or drill, and ticks steps off when the app hears you do them. Songs can play at 70% speed and can **wait for you** at each chord change until the mic hears the new chord (or you tap Continue).
 
-No build step and no dependencies. Everything lives in `index.html`.
+No build step and no dependencies. The app lives in `index.html`; `manifest.webmanifest`, `sw.js` and the `icon-*.png` files let phones add it to the home screen and open it offline.
+
+## Add it to your phone's home screen
+
+- **iPhone (Safari):** open https://jensonng.github.io/ukulele/, tap Share, then **Add to Home Screen**.
+- **Android (Chrome):** open the same link and tap **Install the app** on the Learn tab, or ⋮ › **Add to Home screen**.
+
+It opens full-screen with its own icon and works offline after the first visit. On iPhone, progress in the home-screen app is saved separately from Safari.
 
 ## Run it on your computer
 
